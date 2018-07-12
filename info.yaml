@@ -1,0 +1,26 @@
+# This is the service's name
+service_name: "template"
+service_port: 5000
+max_patch_bytes: 1
+
+# All paths relative from `service` directory
+patchable_files:
+  - src/template.py
+
+# All paths relative to the `services` docker container
+flag_location:
+  - /flag
+
+authors:
+  - adamd
+  - reyammer
+description: "This is a template service."
+
+# Directories for the next two are relative to the `interactions` docker container
+exploit_scripts:
+  - /exploit1.py
+  - /exploit2.sh
+
+sla_scripts:
+  - /check1.py
+  - /check2.sh
