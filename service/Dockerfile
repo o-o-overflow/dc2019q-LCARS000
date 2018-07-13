@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y \
     python3 \
 	xinetd
-RUN touch /flag && chmod 644 /flag
+RUN touch /flag && chmod 644 /flag && echo "TESTFLAG" > /flag
 COPY service.conf /service.conf
 
 COPY src/template.py /template
