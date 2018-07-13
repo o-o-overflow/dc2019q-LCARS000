@@ -32,14 +32,14 @@ IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}
 
 for script in $EXPLOIT_SCRIPTS
 do
-	RESULT=$(docker run -it --rm timeout -t 10 "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT")
+	RESULT=$(docker run -it --rm "$INTERACTION_TAG" timeout -t 10 "$script" "$IP" "$SERVICE_PORT")
 	echo "$RESULT" | grep "FLAG:"
 	echo "$RESULT" | grep "FLAG: TESTFLAG"	
 done
 
 for script in $SLA_SCRIPTS
 do
-	docker run -it --rm timeout -t 10 "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT"
+	docker run -it --rm "$INTERACTION_TAG" timeout -t 10 "$script" "$IP" "$SERVICE_PORT"
 done
 
 docker kill "$SERVICE_ID"
