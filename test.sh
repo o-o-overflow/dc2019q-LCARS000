@@ -20,7 +20,8 @@ SERVICE_ID=$(docker run -d --rm "$SERVICE_TAG")
 EXPLOIT_SCRIPTS="/exploit2.sh"
 
 # TODO: SLA_SCRIPTS=$(get_info.py sla_scripts)
-SLA_SCRIPTS="/check1.py /check2.sh"
+#SLA_SCRIPTS="/check1.py /check2.sh"
+SLA_SCRIPTS="/check2.sh"
 
 # TODO: SERVICE_PORT=$(get_info.py service_port)
 SERVICE_PORT=5000
@@ -31,14 +32,14 @@ IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}
 
 for script in $EXPLOIT_SCRIPTS
 do
-	RESULT=$(docker run -it --rm "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT")
+	RESULT=$(docker run -it --rm timeout -t 10 "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT")
 	echo "$RESULT" | grep "FLAG:"
 	echo "$RESULT" | grep "FLAG: TESTFLAG"	
 done
 
 for script in $SLA_SCRIPTS
 do
-	docker run -it --rm "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT"
+	docker run -it --rm timeout -t 10 "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT"
 done
 
 docker kill "$SERVICE_ID"
