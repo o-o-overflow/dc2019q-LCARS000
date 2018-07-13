@@ -20,7 +20,8 @@ EXPLOIT_SCRIPTS="/exploit1.py /exploit2.sh"
 
 
 # TODO: SLA_SCRIPTS=$(get_info.py sla_scripts)
-SLA_SCRIPTS="/check1.py /check2.sh"
+#SLA_SCRIPTS="/check1.py /check2.sh"
+SLA_SCRIPTS="/check2.sh"
 
 
 # TODO: SERVICE_PORT=$(get_info.py service_port)
