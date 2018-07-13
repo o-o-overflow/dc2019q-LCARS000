@@ -1,0 +1,11 @@
+sudo: required
+
+services:
+  - docker
+
+language: bash
+
+after_install:
+  - 
+
+script: test.sh 
