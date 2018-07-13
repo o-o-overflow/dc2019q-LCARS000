@@ -1,7 +1,7 @@
 # This is the service's name
 service_name: "template"
 service_port: 5000
-max_patch_bytes: 1
+max_patch_bytes: 5
 
 # All paths relative from `service` directory
 patchable_files:
