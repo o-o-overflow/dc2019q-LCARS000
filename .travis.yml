@@ -5,7 +5,4 @@ services:
 
 language: bash
 
-after_install:
-  - 
-
 script: test.sh 
