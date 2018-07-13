@@ -5,4 +5,4 @@ services:
 
 language: bash
 
-script: test.sh 
+script: ./test.sh 
