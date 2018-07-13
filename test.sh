@@ -39,7 +39,7 @@ done
 
 for script in $SLA_SCRIPTS
 do
-	docker run -it --rm "$INTERACTION_TAG" timeout -t 10 "$script" "$IP" "$SERVICE_PORT"
+	RESULT=$(docker run -it --rm "$INTERACTION_TAG" "$script" "$IP" "$SERVICE_PORT")
 done
 
 docker kill "$SERVICE_ID"
