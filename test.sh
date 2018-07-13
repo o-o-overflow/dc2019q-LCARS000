@@ -1,4 +1,7 @@
-#!/bin/bash -e -x
+#!/bin/sh
+
+set -e
+set -x
 
 # quick a dirty extract of the name from the info.yml
 SERVICE_NAME=$(cat info.yml | grep "^service_name:" | cut -f 2 -d '"')
