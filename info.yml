@@ -31,3 +31,16 @@ exploit_scripts:
 sla_scripts:
   - /check1.py
   - /check2.sh
+
+# Service executables and invocation environments
+executables:
+  - path: service_exe1
+    arguments: ["./service_exe1", "arg1", "arg2"]
+    environment:
+      key1: value1
+      key2: value2
+  - path: service_exe2
+    arguments: ["./service_exe2", "arg1", "arg2"]
+    environment:
+      key1: value1
+      key2: value2
