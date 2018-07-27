@@ -1,18 +1,24 @@
 # This is the service's name
 service_name: "template"
 service_port: 5000
-max_patch_bytes: 5
 
 # Type can be normal or king_of_the_hill
 type: normal
 
 # All paths relative from `service` directory
 public_files:
-  - src/template.py
-  - src/config.py
-
-patchable_files:
   - /src/template.py
+  - /src/config.py
+
+# Patch policy
+patch_policy:
+  # Analysis strategy (currently only `tracing`)
+  strategy: tracing
+  # Maximum number of changed bytes across all files
+  max_bytes: 5
+  # Path whitelist, relative to `service` directory
+  whitelist:
+    - /src/service.c
 
 # All paths relative to the `services` docker container
 flag_location:
