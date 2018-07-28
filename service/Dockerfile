@@ -6,6 +6,7 @@ RUN touch /flag && chmod 644 /flag && echo "TESTFLAG" > /flag
 COPY service.conf /service.conf
 
 COPY src/template.py /template
+COPY src/config.py /
 RUN chmod 755 /template
 
 EXPOSE 5000

@@ -3,7 +3,14 @@ service_name: "template"
 service_port: 5000
 max_patch_bytes: 5
 
+# Type can be normal or king_of_the_hill
+type: normal
+
 # All paths relative from `service` directory
+public_files:
+  - src/template.py
+  - src/config.py
+
 patchable_files:
   - src/template.py
 
