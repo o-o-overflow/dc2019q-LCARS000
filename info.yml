@@ -39,13 +39,16 @@ exploit_scripts:
 # SLA scripts are run every tick against the service.
 # This means that SLA traffic will be included in the PCAP dumps to teams
 # Exit with 0 if the service is correct, anything else if it is not.
+# If you want to surface an error message on patch submission, output "ERROR: <ERROR MESSAGE>"
 sla_scripts:
   - /check1.py
   - /check2.sh
 
 # Test scripts are optional.
 # If you have test scripts, they will be used on patch validation, so they can do hard-core service assessment.
-# Will not be run on real services in production. 
+# Will not be run on real services in production.
+# If you want to surface an error message on patch submission, output "ERROR: <ERROR MESSAGE>"
+# If you do not include test_scripts, the sla_scripts will be used to validate patches
 test_scripts:
   - /check1.py
   - /check2.sh
