@@ -10,7 +10,7 @@ def main():
 
     conn = remote(host, port)
 
-    result = conn.recvuntil('awesome chall\n')
+    #result = conn.recvuntil('awesome chall\n')
     result = conn.recvuntil('who are you?\n')
 
     to_send = "adam"
