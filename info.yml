@@ -25,7 +25,8 @@ flag_location:
   - /flag
 
 # Score file, only used for king_of_the_hill services
-score_file: /score
+score_location:
+  - /score
 
 authors:
   - adamd
