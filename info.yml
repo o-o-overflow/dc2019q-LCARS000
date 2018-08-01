@@ -24,6 +24,9 @@ patch_policy:
 flag_location:
   - /flag
 
+# Score file, only used for king_of_the_hill services
+score_file: /score
+
 authors:
   - adamd
   - reyammer
