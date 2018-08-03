@@ -58,9 +58,10 @@ test_scripts:
   - /check2.sh
 
 
-  
 
 # Service executables and invocation environments
+# nullptr's infrastructure needs this to know how to launch (and trace) the target program.
+# This may be complicated to get right: ping nullptr if you have doubts / issues.
 executables:
   # Path is relative to the `service`
   - path: /service_exe1
