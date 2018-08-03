@@ -5,9 +5,10 @@ service_port: 5000
 # Type can be normal or king_of_the_hill
 type: normal
 
-# All paths relative from `service` directory
+# These are the files that will be "public" to the teams via their git
+# repository. The paths are relative to the `service` directory.
 public_files:
-  - /src/template.py
+  - /src/service.c
   - /src/config.py
 
 # Patch policy
@@ -16,7 +17,9 @@ patch_policy:
   strategy: tracing
   # Maximum number of changed bytes across all files
   max_bytes: 5
-  # Path whitelist, relative to `service` directory
+  # Path whitelist: this is the list of files that the teams are allowed to
+  # patch from the set of public files. The paths are relative to `service`
+  # directory.
   whitelist:
     - /src/service.c
 
