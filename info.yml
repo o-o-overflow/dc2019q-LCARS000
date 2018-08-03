@@ -35,7 +35,19 @@ description: "This is a template service."
 
 # Directories for the next two are relative to the `interactions` docker container
 
-# Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if the flag was captured correctly. 
+# Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if
+# the flag was captured correctly. 
+#
+# Note #1: the infrastructure will pick ONE of these, at random. It will NOT run
+# them all at every tick. If you want to run them all, you need to have ONE
+# wrapper script that invokes all the other ones. 
+#
+# Note #2: it is up to you where to draw the line on "n exploits worked ~> the
+# service is still exploitable". Example: let's say you have 5 exploits, you
+# can say "I consider this to be still vulnerable if at least 3/5 work". To do
+# this, internally, you should keep track of how many exploits succeeded and
+# return a valid flag to the infrastructure only if your requirement is
+# satisfied. Ping reyammer/adamd/nullptr with questions.
 exploit_scripts:
   - /exploit1.py
   - /exploit2.sh
@@ -44,6 +56,10 @@ exploit_scripts:
 # This means that SLA traffic will be included in the PCAP dumps to teams
 # Exit with 0 if the service is correct, anything else if it is not.
 # If you want to surface an error message on patch submission, output "ERROR: <ERROR MESSAGE>"
+#
+# Note: the infrastructure will pick ONE of these, at random. It will NOT run
+# them all at every tick. If you want to run them all, you need to have ONE
+# wrapper script that invokes all the other ones.
 sla_scripts:
   - /check1.py
   - /check2.sh
