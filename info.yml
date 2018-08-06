@@ -8,7 +8,7 @@ type: normal
 # These are the files that will be "public" to the teams via their git
 # repository. The paths are relative to the `service` directory.
 public_files:
-  - /src/service.c
+  - /service
   - /src/config.py
 
 # Patch policy
@@ -21,7 +21,8 @@ patch_policy:
   # patch from the set of public files. The paths are relative to `service`
   # directory.
   whitelist:
-    - /src/service.c
+    - /service
+    - /src
 
 # All paths relative to the `services` docker container
 flag_location:
@@ -83,14 +84,12 @@ test_scripts:
 # This may be complicated to get right: ping nullptr if you have doubts / issues.
 executables:
   # Path is relative to the `service`
-  - path: /service_exe1
+  - path: /service
     # Invocation assumes that CWD is `service`
-    arguments: ["./service_exe1", "arg1", "arg2"]
-    environment:
-      key1: value1
-      key2: value2
-  - path: /service_exe2
-    arguments: ["./service_exe2", "arg1", "arg2"]
-    environment:
-      key1: value1
-      key2: value2
+    arguments: ["/service"]
+    environment: {}
+  #- path: /service_exe2
+  #  arguments: ["./service_exe2", "arg1", "arg2"]
+  #  environment:
+  #    key1: value1
+  #    key2: value2
