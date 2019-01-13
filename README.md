@@ -55,14 +55,24 @@ It'll also stress-test it by launching multiple connections that terminate immed
 You can build and test your service with the service manager:
 
 ```
+# do everything
+./tester
+
+#
+# or, piecemeal:
+#
+
 # build the service and public bundle:
 ./tester build
 
-# test the service (interaction tests, stress tests, shortreads)
+# launch and test the service (interaction tests, stress tests, shortreads)
 ./tester test
 
-# do everything
-./tester
+# just launch the service (will print network endpoint info)
+./tester launch
+
+# just test the service
+./tester launch $IP_ADDRESS $PORT
 ```
 
 The following artifacts result from the build process:

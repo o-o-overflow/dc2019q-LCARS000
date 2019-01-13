@@ -7,7 +7,6 @@ import concurrent.futures
 import subprocess
 import tempfile
 import logging
-import socket
 import json
 import yaml
 import time
@@ -31,8 +30,8 @@ image_tag = IMAGE_FMT % service_name
 interaction_image_tag = IMAGE_FMT % service_name + '-interaction'
 container_tag = "running-%s" % service_name
 
-def validate_json():
-	_LOG.info("Validating json...")
+def validate_yaml():
+	_LOG.info("Validating yaml...")
 	assert 'service_name' in service_conf, "no service name specified"
 	assert 'flag' in service_conf, "no service flag specified"
 	if not re.match(FLAG_RE, service_conf['flag']):
@@ -47,6 +46,7 @@ def build_service():
 	else:
 		_LOG.warning("no dockerfile found for service...")
 
+def build_interactions():
 	if os.path.exists(os.path.join(service_dir, "interaction", "Dockerfile")):
 		_LOG.info("Building interaction image...")
 		assert os.system("docker build -t %s %s/interaction" % (interaction_image_tag, service_dir)) == 0, "interaction docker image build failed"
@@ -58,15 +58,18 @@ def _stop_container():
 	os.system("docker kill %s 2>/dev/null >/dev/null" % container_tag)
 	os.system("docker rm %s 2>/dev/null >/dev/null" % container_tag)
 
-def test_service():
-	_LOG.info("Testing container...")
+def launch_service():
 	_LOG.debug("starting container")
 	_start_container()
 	time.sleep(1)
-	container_config = json.loads(subprocess.check_output("docker inspect %s" % container_tag, shell=True))
+	container_config = json.loads(subprocess.check_output("docker inspect %s" % container_tag, shell=True).decode('utf-8'))
 	ip_address = container_config[0]['NetworkSettings']['Networks']['bridge']['IPAddress']
 	port = list(container_config[0]['Config']['ExposedPorts'].keys())[0].split("/")[0]
 	_LOG.debug("network endpoint: %s:%s", ip_address, port)
+	return ip_address, port
+
+def test_service(ip_address, port):
+	_LOG.info("Testing container...")
 
 	_LOG.info("launching interaction container")
 	interaction_container = subprocess.check_output("docker run --rm -i -d %s" % interaction_image_tag, shell=True).strip().decode('utf-8')
@@ -104,7 +107,6 @@ def test_service():
 
 	_LOG.info("stopping interaction container")
 	os.system("docker kill %s" % interaction_container)
-	_stop_container()
 
 def build_bundle():
 	_LOG.info("building public bundle!")
@@ -129,28 +131,44 @@ def build_bundle():
 
 	_stop_container()
 
+	print("")
+	print("")
+	print("ATTENTION: PLEASE MAKE SURE THAT THE CONTENTS OF public_files.tar.gz (SHOWN ABOVE) MAKE SENSE.")
+	print("")
+	print("")
+
 
 if __name__ == '__main__':
-	validate_json()
+	validate_yaml()
 	arg = sys.argv[1] if len(sys.argv) >= 2 else ""
 	if arg == 'build':
 		build_service()
+		build_interactions()
 		build_bundle()
-
-		print("")
-		print("")
-		print("CONGRATULATIONS! Your service is built. Please make sure that the contents of public_files.tar.gz (shown above) make sense.")
-		print("")
-		print("")
 	elif arg == 'test':
-		test_service()
-	else:
+		if len(sys.argv) == 2:
+			_ip_address, _port = launch_service()
+			test_service(_ip_address, _port)
+		else:
+			test_service(sys.argv[2], int(sys.argv[3]))
+	elif arg == 'launch':
 		build_service()
-		test_service()
-		build_bundle()
-
-		print("")
-		print("")
-		print("CONGRATULATIONS! Your service is built and tested. Please make sure that the contents of public_files.tar.gz (shown above) make sense.")
-		print("")
-		print("")
+		try:
+			_ip_address, _port = launch_service()
+			print("")
+			print("SERVICE RUNNING AT: %s %s" % (_ip_address, _port))
+			print("nc %s %s" % (_ip_address, _port))
+			print("./tester test %s %s" % (_ip_address, _port))
+			print("%s:%s" % (_ip_address, _port))
+			input()
+		finally:
+			_stop_container()
+	else:
+		try:
+			build_service()
+			build_interactions()
+			_ip_address, _port = launch_service()
+			test_service(_ip_address, _port)
+			build_bundle()
+		finally:
+			_stop_container()
