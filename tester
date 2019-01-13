@@ -52,14 +52,15 @@ def build_service():
 		assert os.system("docker build -t %s %s/interaction" % (interaction_image_tag, service_dir)) == 0, "interaction docker image build failed"
 
 def _start_container():
+	_stop_container()
 	assert os.system("docker run --name %s --rm -d %s" % (container_tag, image_tag)) == 0, "service container failed to start"
 def _stop_container():
-	os.system("docker kill %s" % container_tag)
+	os.system("docker kill %s 2>/dev/null >/dev/null" % container_tag)
+	os.system("docker rm %s 2>/dev/null >/dev/null" % container_tag)
 
 def test_service():
 	_LOG.info("Testing container...")
 	_LOG.debug("starting container")
-	_stop_container()
 	_start_container()
 	time.sleep(1)
 	container_config = json.loads(subprocess.check_output("docker inspect %s" % container_tag, shell=True))
@@ -96,8 +97,7 @@ def test_service():
 		n *= 2
 
 	_LOG.info("SHORT-READ SANITY CHECK")
-	for _ in range(128):
-		socket.create_connection((ip_address, int(port))).close()
+	assert os.system('docker run --rm ubuntu bash -ec "for i in {1..128}; do echo > /dev/tcp/%s/%s; done"' % (ip_address, port)) == 0
 
 	num_procs = len(subprocess.check_output("docker exec %s ps aux" % container_tag, shell=True).splitlines())
 	assert num_procs < 10, "your service did not clean up after short reads"
@@ -109,7 +109,6 @@ def test_service():
 def build_bundle():
 	_LOG.info("building public bundle!")
 
-	_stop_container()
 	_start_container()
 	time.sleep(2)
 
