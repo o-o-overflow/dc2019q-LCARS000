@@ -3,6 +3,6 @@ sudo: required
 services:
   - docker
 
-language: bash
+language: python
 
-script: ./test.sh 
+script: ./tester

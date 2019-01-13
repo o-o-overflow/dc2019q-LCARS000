@@ -1,5 +1,7 @@
 # DEFCON 2019 Quals Template
 
+[![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-template.svg?token=6XM5nywRvLrMFwxAsXj3&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-template)
+
 Use this chall as template (for the info.yaml, flag, deployment dir, etc.)
 
 The service-manager script will build the service container and test it.
