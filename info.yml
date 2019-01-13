@@ -1,95 +1,42 @@
-# This is the service's name
+# Info for the schoreboard
 service_name: "template"
-service_port: 5000
+description: "This is a template service."
+tags:
+  - pwn
+  - reverse
+violates_flag_format: false # if this is not "true", the flag is verfied against the flag format
+
+flag: "OOO{this is a test flag}" # this is the flag of the service
 
 # Type can be normal or king_of_the_hill
 type: normal
 
-# These are the files that will be "public" to the teams via their git
-# repository. The paths are relative to the `service` directory.
-public_files:
-  - /service
-  - /src/config.py
-
-# Patch policy
-patch_policy:
-  # Analysis strategy (currently only `tracing`)
-  strategy: tracing
-  # Maximum number of changed bytes across all files
-  max_bytes: 5
-  # Path whitelist: this is the list of files that the teams are allowed to
-  # patch from the set of public files. The paths are relative to `service`
-  # directory.
-  whitelist:
-    - /service
-    - /src
-
-# All paths relative to the `services` docker container
-flag_location:
-  - /flag
-
-# Score file, only used for king_of_the_hill services
-score_location:
-  - /score
+# This is the number of concurrent connections that a container should be able to handle.
+# This will be tested by the test script
+concurrent_connections: 16
 
 authors:
   - adamd
   - reyammer
-description: "This is a template service."
+  - zardus
 
-# Directories for the next two are relative to the `interactions` docker container
+#
+# Directories below the next two are absolute in either the `service` or `interaction` docker container.
+#
 
-# Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if
-# the flag was captured correctly. 
-#
-# Note #1: the infrastructure will pick ONE of these, at random. It will NOT run
-# them all at every tick. If you want to run them all, you need to have ONE
-# wrapper script that invokes all the other ones. 
-#
-# Note #2: it is up to you where to draw the line on "n exploits worked ~> the
-# service is still exploitable". Example: let's say you have 5 exploits, you
-# can say "I consider this to be still vulnerable if at least 3/5 work". To do
-# this, internally, you should keep track of how many exploits succeeded and
-# return a valid flag to the infrastructure only if your requirement is
-# satisfied. Ping reyammer/adamd/nullptr with questions.
-exploit_scripts:
+# These are the files that will be "public" to the teams via the scoreboard.
+# The paths are absolute in the `service` docker container.
+public_files:
+  - /service
+  - /config.py
+
+# Test scripts are heavily encouraged.
+# All scripts should exit 0 if nothing went wrong.
+# Scripts are automatically determined to be exploit scripts if they start with the word "exploit".
+# Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if the flag was captured correctly. 
+# The paths are absolute in the `interaction` docker container.
+interactions:
   - /exploit1.py
   - /exploit2.sh
-
-# SLA scripts are run every tick against the service.
-# This means that SLA traffic will be included in the PCAP dumps to teams
-# Exit with 0 if the service is correct, anything else if it is not.
-# If you want to surface an error message on patch submission, output "ERROR: <ERROR MESSAGE>"
-#
-# Note: the infrastructure will pick ONE of these, at random. It will NOT run
-# them all at every tick. If you want to run them all, you need to have ONE
-# wrapper script that invokes all the other ones.
-sla_scripts:
   - /check1.py
   - /check2.sh
-
-# Test scripts are optional.
-# If you have test scripts, they will be used on patch validation, so they can do hard-core service assessment.
-# Will not be run on real services in production.
-# If you want to surface an error message on patch submission, output "ERROR: <ERROR MESSAGE>"
-# If you do not include test_scripts, the sla_scripts will be used to validate patches
-test_scripts:
-  - /check1.py
-  - /check2.sh
-
-
-
-# Service executables and invocation environments
-# nullptr's infrastructure needs this to know how to launch (and trace) the target program.
-# This may be complicated to get right: ping nullptr if you have doubts / issues.
-executables:
-  # Path is relative to the `service`
-  - path: /service
-    # Invocation assumes that CWD is `service`
-    arguments: ["/service"]
-    environment: {}
-  #- path: /service_exe2
-  #  arguments: ["./service_exe2", "arg1", "arg2"]
-  #  environment:
-  #    key1: value1
-  #    key2: value2
