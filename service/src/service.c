@@ -3,6 +3,7 @@
 
 int main(int argc, char** argv) {
     printf("awesome chall\n");
+    fprintf(stderr, "this is stderr\n");
     printf("who are you?\n");
     fflush(stdout);
 
