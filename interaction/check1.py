@@ -12,12 +12,14 @@ def main():
 
     #result = conn.recvuntil('awesome chall\n')
     result = conn.recvuntil('who are you?\n')
+    assert "stderr" not in result
 
     to_send = "adam"
 
     conn.sendline(to_send)
 
     result = conn.recvuntil('you said adam\n')
+    assert "stderr" not in result
 
     sys.exit(0)
 
