@@ -101,6 +101,8 @@ def test_service(ip_address, port):
 
 	_LOG.info("SHORT-READ SANITY CHECK")
 	assert os.system('docker run --rm ubuntu bash -ec "for i in {1..128}; do echo > /dev/tcp/%s/%s; done"' % (ip_address, port)) == 0
+	_LOG.info("waiting for service to clean up after short reads")
+	time.sleep(15)
 
 	num_procs = len(subprocess.check_output("docker exec %s ps aux" % container_tag, shell=True).splitlines())
 	assert num_procs < 10, "your service did not clean up after short reads"
