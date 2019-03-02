@@ -113,15 +113,14 @@ def test_service(ip_address, port):
 def build_bundle():
 	_LOG.info("building public bundle!")
 
-	_start_container()
-	time.sleep(2)
-
 	tempdir = tempfile.mkdtemp()
 	public_path = os.path.join(tempdir, service_name)
 	os.makedirs(public_path)
 	for f in service_conf['public_files']:
 		_LOG.debug("copying file %s into public files", f)
-		assert os.system("docker cp -L %s:%s %s/%s" % (container_tag, f, public_path, os.path.basename(f))) == 0, "failed to retrieve public file %s from the container" % f
+		cmd = "cp -L %s/%s %s/%s" % (service_dir, f, public_path, os.path.basename(f))
+		print(os.getcwd(), cmd)
+		assert os.system(cmd) == 0, "failed to retrieve public file %s" % f
 
 	time.sleep(2)
 	assert os.system("tar cvzf %s/public_bundle.tar.gz -C %s %s" % (service_dir, tempdir, service_name)) == 0, "public file tarball failed; this should not be your fault"
@@ -143,7 +142,9 @@ def build_bundle():
 if __name__ == '__main__':
 	validate_yaml()
 	arg = sys.argv[1] if len(sys.argv) >= 2 else ""
-	if arg == 'build':
+	if arg == 'bundle':
+		build_bundle()
+	elif arg == 'build':
 		build_service()
 		build_interactions()
 		build_bundle()
