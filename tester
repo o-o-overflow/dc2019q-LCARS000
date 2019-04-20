@@ -34,6 +34,7 @@ def validate_yaml():
 	_LOG.info("Validating yaml...")
 	assert 'service_name' in service_conf, "no service name specified"
 	assert 'flag' in service_conf, "no service flag specified"
+	if 'test flag' in service_conf['flag']: _LOG.critical("REMEBER TO CHANGE THE FLAG: %s looks like the test flag", service_conf['flag'])
 	if not re.match(FLAG_RE, service_conf['flag']):
 		_LOG.critical("FLAG %s DOES NOT CONFORM TO THE FLAG FORMAT", service_conf['flag'])
 		if not service_conf['violates_flag_format']:

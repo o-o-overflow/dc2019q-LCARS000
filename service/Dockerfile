@@ -1,5 +1,7 @@
 from ubuntu:18.04
-run apt-get -qq update && apt-get install -qq clang python3 xinetd
+run echo "travis_fold:start:Dapt\033[33;1mservice Dockerfile apt\033[0m" && \
+    apt-get -qq update && apt-get install -qq clang python3 xinetd && \
+    echo "\ntravis_fold:end:Dapt\r"
 # python3-pip, etc.
 
 copy src/config.py /
