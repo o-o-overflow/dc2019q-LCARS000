@@ -24,8 +24,7 @@ There are no expectations, except for:
 
 ## Specifying public files.
 
-Public files are specified in the yaml.
-**They are retrieved from the final docker image using `docker cp`** and bundled into `public_bundle.tar.gz`.
+Public files are specified in the yaml, relative to the git repo root. They will be exposed with individual links, but internally bundled into a `public_bundle.tar.gz`.
 
 ## Writing the exploit and test scripts
 
