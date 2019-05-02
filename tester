@@ -13,6 +13,7 @@ import time
 import sys
 import re
 import os
+import traceback
 
 logging.basicConfig()
 _LOG = logging.getLogger("OOO")
@@ -95,7 +96,15 @@ def test_service(ip_address, port):
 		_LOG.info("stress testing with %d concurrent connections!", n)
 		_LOG.setLevel(max(logging.WARNING, old_level))
 		with concurrent.futures.ThreadPoolExecutor(max_workers=n) as pool:
-			pool.map(_run_interaction, (interaction_files*n)[:n])
+			results = pool.map(_run_interaction, (interaction_files*n)[:n])
+		try:
+			for result in results:
+				pass
+		except Exception as e:
+			_LOG.error('One iteration returns an exception: %s' % str(e))
+			_LOG.error(traceback.format_exc())
+			sys.exit(1)
+
 		_LOG.setLevel(old_level)
 
 		n *= 2
