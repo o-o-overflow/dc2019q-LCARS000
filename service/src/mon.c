@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "mon.h"
 #include "app.h"
 #include <stdio.h>
@@ -31,9 +32,8 @@ static int launch(const char *path) {
         return -1;
     }
     if (!pid) {
-        mprotect((void *)PARAM_RO, PARAM_SIZE, PROT_READ);
-        mprotect((void *)PARAM_RW, PARAM_SIZE * MAX_APP_COUNT, PROT_READ);
-        mprotect(PARAM_FOR(app_cnt), PARAM_SIZE, PROT_READ | PROT_WRITE);
+        mremap(PARAM_FOR(app_cnt), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW);
+        mprotect((void *)PARAM_RO, PARAM_SIZE * MAX_APP_COUNT, PROT_READ);
 
         mmap((void *)(APP_DATA_BASE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
@@ -54,10 +54,9 @@ static int launch(const char *path) {
         asm volatile (
                 "movq %0, %%rsp\n"
                 "pushq %1\n"
-                "mov %2, %%rdi\n"
                 "xor %%rbp, %%rbp\n"
                 "ret\n"
-                ::"g"(APP_STACK_END - 0x10),"g"(APP_TEXT_BASE),"g"(PARAM_FOR(app_cnt)));
+                ::"g"(APP_STACK_END - 0x10),"g"(APP_TEXT_BASE));
         exit(0);
     } else {
         close(channel_app[0]);
@@ -155,9 +154,7 @@ static void handler(int signo, siginfo_t *info, void *context) {
 
 int main(int argc, char *argv[]) {
 
-    struct param_readonly *pro = mmap((void *)PARAM_RO, PARAM_SIZE, PROT_READ | PROT_WRITE,
-            MAP_ANON | MAP_SHARED | MAP_FIXED, -1, 0);
-    void *prw = mmap((void *)PARAM_RW, PARAM_SIZE * MAX_APP_COUNT, PROT_READ | PROT_WRITE,
+    void *param = mmap((void *)PARAM_RO, PARAM_SIZE * MAX_APP_COUNT, PROT_READ | PROT_WRITE,
             MAP_ANON | MAP_SHARED | MAP_FIXED, -1, 0);
 
     struct sigaction act;

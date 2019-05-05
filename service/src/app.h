@@ -9,10 +9,12 @@
 #define APP_STACK_END 0xf0000000ULL
 
 #define PARAM_SIZE 0x1000000ULL
-#define PARAM_RO 0x30000000ULL
-#define PARAM_RW 0x40000000ULL
+#define PARAM_RW 0x30000000ULL
+#define PARAM_RO 0x40000000ULL
+#define PARAM_FOR(id) (void *)(PARAM_RO + PARAM_SIZE * id)
 
-#define PARAM_FOR(id) (void *)(PARAM_RW + PARAM_SIZE * id)
+#define ARG_SIZE 0x100000
+#define ARG_FOR(id) (void *)(PARAM_RW + ARG_SIZE * id)
 
 #define MON_TEXT_BASE 0x100000000ULL
 
@@ -47,10 +49,6 @@ struct app_request {
     uint32_t a, b, c, d;
 };
 
-struct param_readonly {
-    uint32_t magic;
-};
-
 void _start();
 void __exit(int status);
 int _write(int fd, void *buf, uint64_t size);
@@ -61,6 +59,6 @@ int Xecho(const char *str);
 int Xcheckin(const char *str);
 int Xlookup(const char *str);
 
-extern int app_main(void *param);
+extern int app_main();
 
 #endif

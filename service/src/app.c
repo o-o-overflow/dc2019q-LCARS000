@@ -2,14 +2,11 @@
 #include <string.h>
 #include <sys/syscall.h>
 
-static void *param;
-
 __attribute__((section(".app_start")))
-void _start(void *_param) {
-    param = _param;
+void _start() {
     _munmap((void *)MON_TEXT_BASE, 0x1000000);
     // TODO munmap stack and all shared libraries
-    __exit(app_main(_param));
+    __exit(app_main());
 }
 
 void __exit(int status) {
@@ -65,16 +62,16 @@ int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
 
 int Xecho(const char *str) {
     int len = strlen(str);
-    strcpy(param, str);
+    strcpy(ARG_FOR(0), str);
     return request(REQ_ECHO, 0, len, 0, 0);
 }
 
 int Xcheckin(const char *str) {
-    memcpy(param, str, 0x10);
+    memcpy(ARG_FOR(0), str, 0x10);
     return request(REQ_CHECKIN, 0, 0, 0, 0);
 }
 
 int Xlookup(const char *str) {
-    memcpy(param, str, 0x10);
+    memcpy(ARG_FOR(0), str, 0x10);
     return request(REQ_LOOKUP, 0, 0, 0, 0);
 }
