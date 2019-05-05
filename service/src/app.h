@@ -2,6 +2,7 @@
 #define _APP_H
 
 #include <stdint.h>
+#include <sys/socket.h>
 
 #define APP_BLOCK_SIZE 0x4000ULL
 #define APP_TEXT_BASE 0x10000000ULL
@@ -57,6 +58,8 @@ typedef struct app_struct {
 
 void _start();
 void __exit(int status);
+int _sendmsg(int fd, const struct msghdr *msg, int flags);
+int _recvmsg(int fd, struct msghdr *msg, int flags);
 int _write(int fd, void *buf, uint64_t size);
 int _read(int fd, void *buf, uint64_t size);
 int _munmap(void *buf, uint64_t size);

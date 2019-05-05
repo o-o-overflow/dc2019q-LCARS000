@@ -1,6 +1,7 @@
 #include "app.h"
 #include <string.h>
 #include <sys/syscall.h>
+#include <sys/socket.h>
 
 __attribute__((section(".app_start")))
 void _start() {
@@ -14,6 +15,26 @@ void __exit(int status) {
             "syscall\n"
             ::"a"(SYS_exit),"D"(status)
             );
+}
+
+int _sendmsg(int fd, const struct msghdr *msg, int flags) {
+    int res;
+    asm volatile (
+            "syscall\n"
+            :"=a"(res)
+            :"a"(SYS_sendmsg),"D"(fd),"S"(msg),"d"(flags)
+            );
+    return res;
+}
+
+int _recvmsg(int fd, struct msghdr *msg, int flags) {
+    int res;
+    asm volatile (
+            "syscall\n"
+            :"=a"(res)
+            :"a"(SYS_recvmsg),"D"(fd),"S"(msg),"d"(flags)
+            );
+    return res;
 }
 
 int _write(int fd, void *buf, uint64_t size) {
