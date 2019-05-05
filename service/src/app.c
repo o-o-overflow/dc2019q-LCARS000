@@ -114,3 +114,28 @@ int Xpost(int to, int type, const void *buf, uint32_t size) {
     int ret = request(REQ_POST, to, type, 0, size);
     return ret;
 }
+
+int Xopen(const char *str) {
+    int len = strlen(str);
+    strcpy(ARG_FOR(0), str);
+    int ret = request(REQ_OPEN, 0, len + 1, 0, 0);
+    if (ret == 0) {
+        struct msghdr msg = {0};
+        char c;
+        struct iovec io = {
+            .iov_base = &c,
+            .iov_len = 1,
+        };
+        msg.msg_iov = &io;
+        msg.msg_iovlen = 1;
+
+        char c_buffer[256];
+        msg.msg_control = c_buffer;
+        msg.msg_controllen = sizeof(c_buffer);
+        if (_recvmsg(1, &msg, MSG_WAITALL) < 0) {
+            __exit(3);
+        }
+        ret = *(int *)CMSG_DATA(CMSG_FIRSTHDR(&msg));
+    }
+    return ret;
+}

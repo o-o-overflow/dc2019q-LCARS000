@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "mon.h"
 #include "msg.h"
-#include "app.h"
+#include "fs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -125,6 +125,7 @@ static int handle_request(app_t *app) {
     }
     app->cur_req = req;
     int ret = 0;
+    int fd = -1;
     fprintf(stderr, "got request %d (%#x,%#x,%#x,%#x) from %s\n", req.no, req.a, req.b,
             req.c, req.d, app->name);
     switch (req.no) {
@@ -179,6 +180,19 @@ static int handle_request(app_t *app) {
             }
             ret = 0;
             break;
+        case REQ_OPEN:
+            if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
+                file_t *f = open_file(PARAM_FOR(app->id));
+                if (f != NULL) {
+                    fd = f->fd;
+                    ret = 0;
+                } else {
+                    ret = -ENOENT;
+                }
+            } else {
+                ret = -EINVAL;
+            }
+            break;
         default:
             ret = -ENOSYS;
             break;
@@ -188,6 +202,28 @@ response:
     if (write(app->tx, &ret, sizeof(ret)) != sizeof(ret)) {
         perror("write");
         return -1;
+    }
+    if (fd != -1) {
+        struct msghdr msg = {0};
+        char buf[CMSG_SPACE(sizeof(fd))] = {0};
+        struct iovec iovec = {
+            .iov_base = "",
+            .iov_len  = 1,
+        };
+        msg.msg_iov = &iovec;
+        msg.msg_iovlen = 1;
+        msg.msg_control = buf;
+        msg.msg_controllen = sizeof(buf);
+        struct cmsghdr * cmsg = CMSG_FIRSTHDR(&msg);
+        cmsg->cmsg_level = SOL_SOCKET;
+        cmsg->cmsg_type = SCM_RIGHTS;
+        cmsg->cmsg_len = CMSG_LEN(sizeof(fd));
+        *(int *)CMSG_DATA(cmsg) = fd;
+        msg.msg_controllen = CMSG_SPACE(sizeof(fd));
+        if (sendmsg(app->tx, &msg, 0) == -1) {
+            perror("sendmsg");
+            return -1;
+        }
     }
 done:
     return 0;
@@ -216,6 +252,9 @@ int main(int argc, char *argv[]) {
     act.sa_flags = SA_SIGINFO;
 
     sigaction(SIGCHLD, &act, NULL);
+
+    append_file("/dev/stdin", 0);
+    append_file("/dev/stdout", 1);
 
     for (int i = 1; i < argc; i++) {
         launch(argv[i]);

@@ -19,6 +19,7 @@ int Xcheckin(const char *str);
 int Xlookup(const char *str);
 int Xwait(int from, int type, msg_t *msg);
 int Xpost(int to, int type, const void *buf, uint32_t size);
+int Xopen(const char *str);
 
 extern int app_main();
 
