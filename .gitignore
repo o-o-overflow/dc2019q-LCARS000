@@ -1,1 +1,8 @@
 /tags
+.DS_Store
+.*.swp
+*.o
+*.id*
+*.nam
+*.til
+.gdb_history
