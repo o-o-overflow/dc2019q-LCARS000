@@ -121,6 +121,14 @@ static int handle_request(app_t *app) {
             strncpy(app->name, PARAM_FOR(app->id), sizeof(app->name));
             ret = 0;
             break;
+        case REQ_LOOKUP:
+            ret = -ENOENT;
+            for (int i = 0; i < app_cnt; i++) {
+                if (apps[i].state != STATE_DEAD && !strcmp(apps[i].name, PARAM_FOR(app->id))) {
+                    ret = i;
+                    break;
+                }
+            }
         default:
             ret = -ENOSYS;
             break;

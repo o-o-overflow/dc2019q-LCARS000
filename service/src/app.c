@@ -73,3 +73,8 @@ int Xcheckin(const char *str) {
     memcpy(param, str, 0x10);
     return request(REQ_CHECKIN, 0, 0, 0, 0);
 }
+
+int Xlookup(const char *str) {
+    memcpy(param, str, 0x10);
+    return request(REQ_LOOKUP, 0, 0, 0, 0);
+}

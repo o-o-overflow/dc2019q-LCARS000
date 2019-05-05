@@ -18,6 +18,7 @@
 
 #define REQ_ECHO 0
 #define REQ_CHECKIN 1
+#define REQ_LOOKUP 2
 
 struct region {
     uint32_t start;
@@ -58,6 +59,7 @@ int _munmap(void *buf, uint64_t size);
 int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 int Xecho(const char *str);
 int Xcheckin(const char *str);
+int Xlookup(const char *str);
 
 extern int app_main(void *param);
 
