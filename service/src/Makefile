@@ -11,7 +11,7 @@ all: mon $(APPS)
 clean:
 	rm -rf *.o *.elf $(APPS)
 
-mon: mon.o
+mon: mon.o msg.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
 
 %.elf: app.o %.o
