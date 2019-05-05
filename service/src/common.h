@@ -22,6 +22,7 @@
 #define REQ_WAIT 3
 #define REQ_POST 4
 #define REQ_OPEN 5
+#define REQ_EXEC 6
 
 struct app_request {
     uint32_t no;

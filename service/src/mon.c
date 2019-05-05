@@ -189,11 +189,25 @@ static int handle_request(app_t *app) {
             ret = 0;
             break;
         case REQ_OPEN:
+            // TODO file permissions
             if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
                 file_t *f = open_file(PARAM_FOR(app->id));
                 if (f != NULL) {
                     fd = f->fd;
                     ret = 0;
+                } else {
+                    ret = -ENOENT;
+                }
+            } else {
+                ret = -EINVAL;
+            }
+            break;
+        case REQ_EXEC:
+            // TODO exec permissions
+            if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
+                file_t *f = open_file(PARAM_FOR(app->id));
+                if (f != NULL) {
+                    ret = launch(f->fd);
                 } else {
                     ret = -ENOENT;
                 }
@@ -311,7 +325,9 @@ int main(int argc, char *argv[]) {
     }
     signal(SIGCHLD, SIG_IGN);
     for (int i = 0; i < MAX_APP_COUNT; i++) {
-        kill(apps[i].pid, 9);
+        if (apps[i].state != STATE_DEAD && apps[i].pid != 0) {
+            kill(apps[i].pid, 9);
+        }
     }
     return 0;
 }

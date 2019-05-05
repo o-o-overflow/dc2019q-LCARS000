@@ -85,6 +85,17 @@ int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
     return res;
 }
 
+int read_until(int fd, void *buf, uint64_t size, char delim) {
+    char c;
+    for (int i = 0; i < size; i++) {
+        if (_read(fd, &c, 1) <= 0 || c == delim) {
+            return i;
+        }
+        ((char *)buf)[i] = c;
+    }
+    return size;
+}
+
 int Xecho(const char *str) {
     int len = strlen(str);
     strcpy(ARG_FOR(0), str);
@@ -138,4 +149,10 @@ int Xopen(const char *str) {
         ret = *(int *)CMSG_DATA(CMSG_FIRSTHDR(&msg));
     }
     return ret;
+}
+
+int Xexec(const char *str) {
+    int len = strlen(str);
+    strcpy(ARG_FOR(0), str);
+    return request(REQ_EXEC, 0, len + 1, 0, 0);
 }
