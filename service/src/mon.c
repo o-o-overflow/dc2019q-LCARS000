@@ -14,26 +14,34 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-static int app_cnt = 0;
 static app_t apps[MAX_APP_COUNT];
 
-static int launch(const char *path) {
-    int fd = open(path, O_RDONLY);
+static int launch(int fd) {
     struct stat stat;
-    if (fd == -1 || fstat(fd, &stat) == -1) {
-        return -1;
+    if (fd == -1 || fstat(fd, &stat) == -1 || stat.st_size == 0) {
+        return -EINVAL;
     }
     int channel_mon[2], channel_app[2];
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, channel_app) == -1
         || socketpair(AF_UNIX, SOCK_STREAM, 0, channel_mon) == -1) {
-        return -1;
+        return -errno;
+    }
+    int app_id = -1;
+    for (int i = 0; i < MAX_APP_COUNT; i++) {
+        if (apps[i].state == STATE_INIT || apps[i].state == STATE_DEAD) {
+            app_id = i;
+            break;
+        }
+    }
+    if (app_id == -1) {
+        return -EBUSY;
     }
     int pid = fork();
     if (pid == -1) {
-        return -1;
+        return -errno;
     }
     if (!pid) {
-        mremap(PARAM_FOR(app_cnt), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW);
+        mremap(PARAM_FOR(app_id), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW);
         mprotect((void *)PARAM_RO, PARAM_SIZE * MAX_APP_COUNT, PROT_READ);
 
         mmap((void *)(APP_DATA_BASE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
@@ -62,16 +70,16 @@ static int launch(const char *path) {
     } else {
         close(channel_app[0]);
         close(channel_mon[1]);
-        app_t *app = &apps[app_cnt];
-        app->id = app_cnt++;
+        app_t *app = &apps[app_id];
+        app->id = app_id;
         app->pid = pid;
         app->tx = channel_mon[0];
         app->rx = channel_app[1];
-        app->state = STATE_INIT;
+        app->state = STATE_IDLE;
         app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
     }
-    return 0;
+    return app_id;
 }
 
 static void cleanup(app_t *app) {
@@ -98,7 +106,7 @@ static int read_all(int fd, void *buf, size_t total) {
 }
 
 static app_t *query_app(const char *name) {
-    for (int i = 0; i < app_cnt; i++) {
+    for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].state != STATE_DEAD && !strcmp(apps[i].name, name)) {
             return &apps[i];
         }
@@ -107,7 +115,7 @@ static app_t *query_app(const char *name) {
 }
 
 static app_t *get_app(int id) {
-    if (id >= 0 && id < app_cnt && apps[id].state != STATE_DEAD) {
+    if (id >= 0 && id < MAX_APP_COUNT && apps[id].state != STATE_DEAD) {
         return &apps[id];
     }
     return NULL;
@@ -231,7 +239,7 @@ done:
 
 static void handler(int signo, siginfo_t *info, void *context) {
     int pid = info->si_pid;
-    for (int i = 0; i < app_cnt; i++) {
+    for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].pid == pid) {
             cleanup(&apps[i]);
             fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
@@ -257,13 +265,17 @@ int main(int argc, char *argv[]) {
     append_file("/dev/stdout", 1);
 
     for (int i = 1; i < argc; i++) {
-        launch(argv[i]);
+        int fd = open(argv[i], O_RDONLY);
+        if (fd != -1) {
+            append_file(argv[i], fd);
+            launch(fd);
+        }
     }
     while (1) {
         fd_set set;
         FD_ZERO(&set);
         int mfd = -1;
-        for (int i = 0; i < app_cnt; i++) {
+        for (int i = 0; i < MAX_APP_COUNT; i++) {
             if (apps[i].state != STATE_DEAD) {
                 int fd = apps[i].rx;
                 if (fd != -1) {
@@ -284,7 +296,7 @@ int main(int argc, char *argv[]) {
             perror("select");
             break;
         }
-        for (int i = 0; i < app_cnt; i++) {
+        for (int i = 0; i < MAX_APP_COUNT; i++) {
             if (apps[i].state != STATE_DEAD) {
                 int fd = apps[i].rx;
                 if (fd != -1 && FD_ISSET(fd, &set)) {
@@ -298,7 +310,7 @@ int main(int argc, char *argv[]) {
         }
     }
     signal(SIGCHLD, SIG_IGN);
-    for (int i = 0; i < app_cnt; i++) {
+    for (int i = 0; i < MAX_APP_COUNT; i++) {
         kill(apps[i].pid, 9);
     }
     return 0;

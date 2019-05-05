@@ -7,7 +7,7 @@
 #define MAX_APP_COUNT 16
 
 enum app_state {
-    STATE_INIT,
+    STATE_INIT = 0,
     STATE_IDLE,
     STATE_BUSY,
     STATE_DEAD,
