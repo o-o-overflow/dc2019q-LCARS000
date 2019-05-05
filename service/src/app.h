@@ -21,18 +21,27 @@
 #define REQ_ECHO 0
 #define REQ_CHECKIN 1
 #define REQ_LOOKUP 2
-
-struct region {
-    uint32_t start;
-    uint32_t end;
-    uint32_t prot;
-};
+#define REQ_WAIT 3
+#define REQ_POST 4
 
 enum app_state {
     STATE_INIT,
     STATE_IDLE,
     STATE_BUSY,
     STATE_DEAD,
+};
+
+typedef struct msg {
+    int32_t from;
+    int32_t type;
+    uint32_t start;
+    uint32_t size;
+    struct msg *next;
+} msg_t;
+
+struct app_request {
+    uint32_t no;
+    uint32_t a, b, c, d;
 };
 
 typedef struct app_struct {
@@ -42,12 +51,9 @@ typedef struct app_struct {
     int rx;
     enum app_state state;
     char name[0x10];
+    struct app_request cur_req;
+    struct msg *msg;
 } app_t;
-
-struct app_request {
-    uint32_t no;
-    uint32_t a, b, c, d;
-};
 
 void _start();
 void __exit(int status);
@@ -58,6 +64,8 @@ int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 int Xecho(const char *str);
 int Xcheckin(const char *str);
 int Xlookup(const char *str);
+int Xwait(int from, int type, msg_t *msg);
+int Xpost(int to, int type, const void *buf, uint32_t size);
 
 extern int app_main();
 

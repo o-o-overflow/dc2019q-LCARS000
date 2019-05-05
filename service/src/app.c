@@ -54,9 +54,13 @@ int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
         .c = c,
         .d = d,
     };
-    _write(0, &req, sizeof(req));
+    if (_write(0, &req, sizeof(req)) != sizeof(req)) {
+        __exit(1);
+    }
     int32_t res = 0;
-    _read(1, &res, sizeof(res));
+    if (_read(1, &res, sizeof(res)) != sizeof(res)) {
+        __exit(2);
+    }
     return res;
 }
 
@@ -74,4 +78,18 @@ int Xcheckin(const char *str) {
 int Xlookup(const char *str) {
     memcpy(ARG_FOR(0), str, 0x10);
     return request(REQ_LOOKUP, 0, 0, 0, 0);
+}
+
+int Xwait(int from, int type, msg_t *msg) {
+    int ret = request(REQ_WAIT, from, type, 0, 0x10);
+    if (ret == 0 && msg != NULL) {
+        memcpy(msg, ARG_FOR(0), 0x10);
+    }
+    return ret;
+}
+
+int Xpost(int to, int type, const void *buf, uint32_t size) {
+    memcpy(ARG_FOR(0), buf, size);
+    int ret = request(REQ_POST, to, type, 0, size);
+    return ret;
 }

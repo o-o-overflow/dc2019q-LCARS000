@@ -56,7 +56,7 @@ static int launch(const char *path) {
                 "pushq %1\n"
                 "xor %%rbp, %%rbp\n"
                 "ret\n"
-                ::"g"(APP_STACK_END - 0x10),"g"(APP_TEXT_BASE));
+                ::"g"(APP_STACK_END - 0x8),"g"(APP_TEXT_BASE));
         exit(0);
     } else {
         close(channel_app[0]);
@@ -67,6 +67,7 @@ static int launch(const char *path) {
         app->tx = channel_mon[0];
         app->rx = channel_app[1];
         app->state = STATE_INIT;
+        app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
     }
     return 0;
@@ -95,6 +96,86 @@ static int read_all(int fd, void *buf, size_t total) {
     return i;
 }
 
+static msg_t *query_msg(app_t *app, int from, int type) {
+    for (msg_t *msg = app->msg; msg != NULL; msg = msg->next) {
+        if ((from == -1 || from == msg->from) &&
+                (type == -1 || type == msg->type)) {
+            return msg;
+        }
+    }
+    return NULL;
+}
+
+static msg_t *delete_msg(app_t *app, int from, int type) {
+    for (msg_t *msg = app->msg, *prev = NULL; msg != NULL; msg = msg->next) {
+        if ((from == -1 || from == msg->from) &&
+                (type == -1 || type == msg->type)) {
+            if (prev == NULL) {
+                app->msg = msg->next;
+            } else {
+                prev->next = msg->next;
+            }
+            return msg;
+        }
+        prev = msg;
+    }
+    return NULL;
+}
+
+static void append_msg(app_t *app, msg_t *msg) {
+    if (app->msg == NULL) {
+        app->msg = msg;
+        return ;
+    }
+    for (msg_t *tail = app->msg; ; tail = tail->next) {
+        if (tail->next == NULL) {
+            tail->next = msg;
+            return ;
+        }
+    }
+}
+
+static int accept_msg(app_t *app) {
+    if (app->cur_req.no != REQ_WAIT) {
+        return -1;
+    }
+    int from = app->cur_req.a;
+    int type = app->cur_req.b;
+    msg_t *msg = delete_msg(app, from, type);
+    if (msg == NULL) {
+        return -1;
+    }
+    int len = app->cur_req.d;
+    if (len > 0x10) {
+        len = 0x10;
+    }
+    memcpy(PARAM_FOR(app->id) + app->cur_req.c, msg, len);
+    free(msg);
+    app->cur_req.no = -1;
+    int res = 0;
+    if (write(app->tx, &res, sizeof(res)) != sizeof(res)) {
+        perror("write");
+        return -1;
+    }
+    return 0;
+}
+
+static app_t *query_app(const char *name) {
+    for (int i = 0; i < app_cnt; i++) {
+        if (apps[i].state != STATE_DEAD && !strcmp(apps[i].name, name)) {
+            return &apps[i];
+        }
+    }
+    return NULL;
+}
+
+static app_t *get_app(int id) {
+    if (id >= 0 && id < app_cnt && apps[id].state != STATE_DEAD) {
+        return &apps[id];
+    }
+    return NULL;
+}
+
 static int handle_request(app_t *app) {
     struct app_request req = {0};
     int c = read_all(app->rx, &req, sizeof(req));
@@ -105,6 +186,7 @@ static int handle_request(app_t *app) {
         perror("read");
         return -1;
     }
+    app->cur_req = req;
     int ret = 0;
     fprintf(stderr, "got request %d (%#x,%#x,%#x,%#x) from %s\n", req.no, req.a, req.b,
             req.c, req.d, app->name);
@@ -121,22 +203,56 @@ static int handle_request(app_t *app) {
             ret = 0;
             break;
         case REQ_LOOKUP:
-            ret = -ENOENT;
-            for (int i = 0; i < app_cnt; i++) {
-                if (apps[i].state != STATE_DEAD && !strcmp(apps[i].name, PARAM_FOR(app->id))) {
-                    ret = i;
-                    break;
-                }
+            {
+                app_t *a = query_app(PARAM_FOR(app->id));
+                ret = a == NULL ? -ENOENT : a->id;
+                break;
             }
+        case REQ_WAIT:
+            if (req.c >= PARAM_SIZE || req.d >= PARAM_SIZE || req.c + req.d >= PARAM_SIZE) {
+                ret = -EINVAL;
+                break;
+            }
+            accept_msg(app);
+            goto done;
+        case REQ_POST:
+            if (req.c >= PARAM_SIZE || req.d >= PARAM_SIZE || req.c + req.d >= PARAM_SIZE) {
+                ret = -EINVAL;
+                break;
+            }
+            app_t *a = get_app(req.a);
+            if (a == NULL) {
+                ret = -ENOENT;
+                break;
+            }
+            if (query_msg(app, app->id, req.b) != NULL) {
+                ret = -EBUSY;
+                break;
+            }
+            msg_t *msg = calloc(1, sizeof(msg_t));
+            msg->from = app->id;
+            msg->type = req.b;
+            msg->start = req.c;
+            msg->size = req.d;
+            msg->next = NULL;
+            append_msg(a, msg);
+            if (a->cur_req.no == REQ_WAIT) {
+                // try push the new message
+                accept_msg(a);
+            }
+            ret = 0;
+            break;
         default:
             ret = -ENOSYS;
             break;
     }
 response:
+    app->cur_req.no = -1;
     if (write(app->tx, &ret, sizeof(ret)) != sizeof(ret)) {
         perror("write");
         return -1;
     }
+done:
     return 0;
 }
 
@@ -145,11 +261,11 @@ static void handler(int signo, siginfo_t *info, void *context) {
     for (int i = 0; i < app_cnt; i++) {
         if (apps[i].pid == pid) {
             cleanup(&apps[i]);
-            fprintf(stderr, "%s exit\n", apps[i].name);
+            fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
             return ;
         }
     }
-    fprintf(stderr, "child %d exit?\n", pid);
+    fprintf(stderr, "child %d exit %#x?\n", pid, info->si_status);
 }
 
 int main(int argc, char *argv[]) {
