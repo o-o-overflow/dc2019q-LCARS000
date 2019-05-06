@@ -16,6 +16,6 @@ typedef struct file {
 
 file_t *query_file(const char *name);
 file_t *open_file(const char *name, int perm);
-void append_file(const char *name, int fd, int perm);
+file_t *append_file(const char *name, int fd, int perm);
 
 #endif

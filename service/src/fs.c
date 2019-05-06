@@ -32,20 +32,16 @@ file_t *open_file(const char *name, int perm) {
             return NULL;
         }
     }
-    file.fd = memfd_create(file.name, 0);
-    file.perm = FILE_RDWR;
-    if (file.fd != -1) {
-        files[file_cnt] = file;
-        return &files[file_cnt++];
-    } else {
-        return NULL;
-    }
+    return append_file(file.name, memfd_create(file.name, 0), FILE_RDWR);
 }
 
-void append_file(const char *name, int fd, int perm) {
+file_t *append_file(const char *name, int fd, int perm) {
     if (fd != -1 && file_cnt < MAX_FILE_COUNT) {
         strncpy(files[file_cnt].name, trim_path(name), sizeof(files[file_cnt].name));
         files[file_cnt].perm = perm;
-        files[file_cnt++].fd = fd;
+        files[file_cnt].fd = fd;
+        return &files[file_cnt++];
+    } else {
+        return NULL;
     }
 }
