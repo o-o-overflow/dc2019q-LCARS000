@@ -2,6 +2,7 @@
 #define _LOADER_H
 
 #include <stdint.h>
+#include "crypto.h"
 
 #define MAX_PAGE_COUNT 0x1000
 
@@ -16,13 +17,24 @@ enum page_type {
     PAGE_WRITE = 2,
     PAGE_EXEC = 4,
     PAGE_ALL = 7,
-    PAGE_CRYPT = 8,
+    PAGE_ENCRYPTED = 8,
+    PAGE_SIGNED = 0x10,
 };
 
 struct app_page {
     uint32_t start;
     uint32_t size;
     uint32_t flags;
+};
+
+struct app_page_crypto {
+    uint8_t mode;
+    uint8_t key_id;
+    uint8_t key[0x20];
+    uint8_t iv[0x10];
+};
+
+struct app_page_sig {
 };
 
 struct app_region {

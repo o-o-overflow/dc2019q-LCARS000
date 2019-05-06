@@ -5,7 +5,41 @@
 #include <errno.h>
 #include <sys/mman.h>
 
+#define AES_BLOCK_SIZE 0x10
+
 static struct app_region regions[MAX_PAGE_COUNT];
+
+static int aes_decrypt(struct app_page_crypto *ci, const char *in, char *out, size_t size) {
+    int crypto_service = Xlookup("crypto");
+    struct crypto_request req = {0};
+    msg_t m = {0};
+    req.type = CRYPTO_DECRYPT_AES;
+    req.cipher_key_id = ci->key_id;
+    req.cipher_size = 256;
+    req.cipher_mode = ci->mode;
+    req.cipher_key = shm_alloc(sizeof(AES_KEY));
+    req.cipher_key_size = sizeof(AES_KEY);
+    memcpy(PARAM_AT(req.cipher_key), ci->key, sizeof(AES_KEY));
+    req.cipher_data = shm_alloc(size);
+    req.cipher_data_size = size;
+    memcpy(PARAM_AT(req.cipher_data), in, size);
+    req.cipher_iv = shm_alloc(AES_BLOCK_SIZE);
+    req.cipher_iv_size = AES_BLOCK_SIZE;
+    memcpy(PARAM_AT(req.cipher_iv), ci->iv, AES_BLOCK_SIZE);
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
+    Xwait(crypto_service, -1, &m);
+    if (m.type == 0) {
+        memcpy(out, PARAM_FOR(m.from) + m.start, m.size);
+#ifdef DEBUG
+    } else {
+        Xecho(PARAM_FOR(m.from) + m.start);
+#endif
+    }
+    return m.type;
+}
 
 static int64_t app_load(const char *file, const char **err) {
     int fd = Xopen(file);
@@ -31,18 +65,34 @@ static int64_t app_load(const char *file, const char **err) {
     header.name[sizeof(header.name) - 1] = 0;
     int64_t entry = -1;
     int region_cnt = 0;
-    char *tmpbuf = PARAM_AT(shm_alloc(0x1000));
+    char tmpbuf[0x1000];
     for (int i = 0; i < header.pages; i++) {
         struct app_page pg = {0};
+        struct app_page_crypto c = {0};
         ret = read_all(fd, &pg, sizeof(pg));
         if (ret < 0) {
             *err = "page";
             goto fail;
-            return ret;
+        }
+        if (pg.flags & PAGE_SIGNED) {
+            // TODO check signature
+        }
+        if (pg.flags & PAGE_ENCRYPTED) {
+            ret = read_all(fd, &c, sizeof(c));
+            if (ret < 0) {
+                *err = "crypto info";
+                goto fail;
+            } else if ((c.mode != CRYPTO_MODE_ECB && c.mode != CRYPTO_MODE_CBC)
+                    || c.key_id > CRYPTO_KEY_SESSION) {
+                ret = -EINVAL;
+                *err = "crypto param";
+                goto fail;
+            }
         }
         ret = -EINVAL;
         // alignment
-        if ((pg.start & 0xfff) || pg.size > 0x1000 || pg.size == 0) {
+        if ((pg.start & 0xfff) || pg.size > 0x1000 || pg.size == 0
+            || ((pg.flags & PAGE_ENCRYPTED) && (pg.size & (AES_BLOCK_SIZE - 1)))) {
             *err = "aglinment";
             goto fail;
         }
@@ -78,7 +128,15 @@ static int64_t app_load(const char *file, const char **err) {
             *err = "truncated";
             goto fail;
         }
-        memcpy(page, tmpbuf, pg.size);
+        if (pg.flags & PAGE_ENCRYPTED) {
+            ret = aes_decrypt(&c, tmpbuf, page, pg.size);
+            if (ret < 0) {
+                *err = "decrypt";
+                goto fail;
+            }
+        } else {
+            memcpy(page, tmpbuf, pg.size);
+        }
         if ((pg.flags & (PAGE_ALL)) != PAGE_WRITE) {
             ret = _mprotect(page, 0x1000, pg.flags & PAGE_ALL);
             if (ret != 0) {

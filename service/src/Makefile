@@ -9,7 +9,7 @@ UNTRUSTED_APPS=hello.app
 
 all: mon $(PLATFORM_APPS) $(UNTRUSTED_APPS)
 
-.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf
+.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw
 
 clean:
 	rm -rf *.o *.elf $(PLATFORM_APPS) $(UNTRUSTED_APPS)
@@ -29,5 +29,5 @@ mon: mon.o msg.o fs.o
 
 %.app: app.o %.o
 	$(PREFIX)ld -T uapp.x -o $*.raw $^ $(LIBC)
-	$(PREFIX)objcopy $*.raw -O binary -j .text -j .data $@
-	python app.py $* $@ $@
+	$(PREFIX)objcopy $*.raw -O binary -j .text -j .data $*.raw
+	python app.py $* $*.raw $@
