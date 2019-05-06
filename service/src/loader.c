@@ -116,6 +116,7 @@ int app_main() {
         int64_t entry = app_load(name, &err);
         Xpost(msg.from, entry, err, strlen(err) + 1);
         if (entry > 0) {
+            Xrunas(CTX_UNTRUSTED_APP);
             ((void (*)())entry)();
         }
     }

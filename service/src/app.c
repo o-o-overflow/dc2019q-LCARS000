@@ -223,9 +223,13 @@ int Xopen(const char *str) {
     return ret;
 }
 
-int Xexec(const char *str) {
+int Xexec(const char *str, int ctx) {
     int len = strlen(str) + 1;
     uint32_t a = shm_alloc(len);
     strcpy(PARAM_AT(a), str);
-    return request(REQ_EXEC, a, len, 0, 0);
+    return request(REQ_EXEC, a, len, ctx, 0);
+}
+
+int Xrunas(int ctx) {
+    return request(REQ_RUNAS, ctx, 0, 0, 0);
 }

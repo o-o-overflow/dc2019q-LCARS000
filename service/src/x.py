@@ -9,8 +9,6 @@ def download(rfile, lfile):
         r.sendline('download %s %d' % (rfile, len(blob)))
         r.send(blob)
 
-r.sendline('run echo.bin')
-r.sendline('run crypto.bin')
 download('hello.app', 'hello.app')
 r.sendline('run hello.app')
 

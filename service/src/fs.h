@@ -8,14 +8,22 @@ enum file_perm {
     FILE_EXEC = 2,
 };
 
+enum file_role {
+    FILE_ROLE_SYSTEM_DATA,
+    FILE_ROLE_PLATFORM_DATA,
+    FILE_ROLE_UNTRUSTED_DATA,
+    FILE_ROLE_GLOBAL_DATA,
+};
+
 typedef struct file {
     int fd;
-    int perm;
+    enum file_perm perm;
+    enum file_role role;
     char name[0x20];
 } file_t;
 
 file_t *query_file(const char *name);
-file_t *open_file(const char *name, int perm);
-file_t *append_file(const char *name, int fd, int perm);
+file_t *open_file(int ctx, const char *name, int perm);
+file_t *append_file(int ctx, const char *name, int fd, int perm);
 
 #endif

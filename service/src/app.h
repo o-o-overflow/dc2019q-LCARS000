@@ -26,7 +26,8 @@ int Xlookup(const char *str);
 int Xwait(int from, int type, msg_t *msg);
 int Xpost(int to, int type, const void *buf, uint32_t size);
 int Xopen(const char *str);
-int Xexec(const char *str);
+int Xexec(const char *str, int ctx);
+int Xrunas(int ctx);
 
 extern int app_main();
 

@@ -26,6 +26,7 @@ inline int access_ok(uint32_t offset, uint32_t size) {
 #define REQ_POST 4
 #define REQ_OPEN 5
 #define REQ_EXEC 6
+#define REQ_RUNAS 7
 
 inline const char *str_request(int32_t no) {
     switch (no) {
@@ -43,10 +44,19 @@ inline const char *str_request(int32_t no) {
             return "open";
         case REQ_EXEC:
             return "exec";
+        case REQ_RUNAS:
+            return "runas";
         default:
             return "unknown";
     }
 }
+
+enum app_ctx {
+    CTX_KERNEL,
+    CTX_SYSTEM_APP,
+    CTX_PLATFORM_APP,
+    CTX_UNTRUSTED_APP,
+};
 
 struct app_request {
     uint32_t no;

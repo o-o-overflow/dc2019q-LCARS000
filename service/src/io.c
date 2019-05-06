@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#define ECHO "echo.bin"
+#define CRYPTO "crypto.bin"
 #define LOADER "loader.bin"
 #define MAX_COMMAND_LENGTH 0x100
 #define MAX_PARAM_COUNT 8
@@ -35,11 +37,19 @@ static int download(int fin, const char *file, uint32_t size) {
 
 int app_main() {
     Xcheckin("io");
+
     int in = Xopen("/dev/stdin");
     int out = Xopen("/dev/stdout");
+
+    // launch services
+    Xexec(ECHO, CTX_SYSTEM_APP);
+    Xexec(CRYPTO, CTX_SYSTEM_APP);
+
+    // drop privileges
+    Xrunas(CTX_PLATFORM_APP);
+
     char buf[MAX_COMMAND_LENGTH];
     const char *argv[MAX_PARAM_COUNT];
-
     while (1) {
         int n = read_until(in, &buf, sizeof(buf) - 1, '\n');
         if (n < 0) {
@@ -62,9 +72,9 @@ int app_main() {
             dprintf(out, "argv[%d] = \"%s\"\n", i, argv[i]);
         }
         if (!strcmp(argv[0], "run")) {
-            int ret = Xexec(argv[1]);
+            int ret = Xexec(argv[1], CTX_PLATFORM_APP);
             if (ret == -EACCES) {
-                int ldr = Xexec(LOADER);
+                int ldr = Xexec(LOADER, CTX_PLATFORM_APP);
                 dprintf(out, "loading at #%d...\n", ldr);
                 if (ldr >= 0 && (ret = Xpost(ldr, 'load', argv[1], strlen(argv[1]) + 1)) == 0) {
                     msg_t msg = {0};

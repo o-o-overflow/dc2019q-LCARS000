@@ -16,7 +16,7 @@
 
 static app_t apps[MAX_APP_COUNT];
 
-static int launch(int fd) {
+static int launch(enum app_ctx ctx, int fd) {
     struct stat stat;
     if (fd == -1 || fstat(fd, &stat) == -1 || stat.st_size == 0) {
         return -EINVAL;
@@ -75,6 +75,7 @@ static int launch(int fd) {
         app->pid = pid;
         app->tx = channel_mon[0];
         app->rx = channel_app[1];
+        app->ctx = ctx;
         app->state = STATE_IDLE;
         app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
@@ -210,7 +211,7 @@ static int handle_request(app_t *app) {
             if (access_ok(req.a, req.b)
                     && copy_from_app(app->id, req.a, req.b, &name, 0x20)) {
                 name[0x1f] = 0;
-                file_t *f = open_file(name, FILE_RDWR);
+                file_t *f = open_file(app->ctx, name, FILE_RDWR);
                 if (f != NULL) {
                     fd = f->fd;
                     ret = 0;
@@ -230,9 +231,13 @@ static int handle_request(app_t *app) {
             if (access_ok(req.a, req.b)
                     && copy_from_app(app->id, req.a, req.b, &name, 0x20)) {
                 name[0x1f] = 0;
-                file_t *f = open_file(name, FILE_EXEC);
+                file_t *f = open_file(app->ctx, name, FILE_EXEC);
                 if (f != NULL) {
-                    ret = launch(f->fd);
+                    uint32_t ctx = req.c;
+                    if (ctx < app->ctx) {
+                        ctx = app->ctx;
+                    }
+                    ret = launch(ctx, f->fd);
                 } else {
                     if (query_file(name) != NULL) {
                         // exists but not executable
@@ -243,6 +248,15 @@ static int handle_request(app_t *app) {
                 }
             } else {
                 ret = -EINVAL;
+            }
+            break;
+        case REQ_RUNAS:
+            if (req.a > CTX_UNTRUSTED_APP) {
+                ret = -EINVAL;
+            } else if (req.a < app->ctx) {
+                ret = -EPERM;
+            } else {
+                app->ctx = req.a;
             }
             break;
         default:
@@ -306,22 +320,22 @@ int main(int argc, char *argv[]) {
 
     sigaction(SIGCHLD, &act, NULL);
 
-    append_file("/dev/stdin", 0, FILE_RDWR);
-    append_file("/dev/stdout", 1, FILE_RDWR);
-    append_file("/dev/urandom", open("/dev/urandom", O_RDONLY), FILE_RDWR);
+    append_file(CTX_SYSTEM_APP, "/dev/stdin", 0, FILE_RDWR);
+    append_file(CTX_SYSTEM_APP, "/dev/stdout", 1, FILE_RDWR);
+    append_file(CTX_SYSTEM_APP, "/dev/urandom", open("/dev/urandom", O_RDONLY), FILE_RDWR);
 
     int init = -1;
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
-            append_file(argv[i], fd, FILE_EXEC);
+            append_file(CTX_KERNEL, argv[i], fd, FILE_EXEC);
             if (init == -1) {
                 init = fd;
             }
         }
     }
 
-    launch(init);
+    launch(CTX_SYSTEM_APP, init);
 
     while (1) {
         fd_set set;
