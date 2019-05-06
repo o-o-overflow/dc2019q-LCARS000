@@ -308,6 +308,7 @@ int main(int argc, char *argv[]) {
 
     append_file("/dev/stdin", 0, FILE_RDWR);
     append_file("/dev/stdout", 1, FILE_RDWR);
+    append_file("/dev/urandom", open("/dev/urandom", O_RDONLY), FILE_RDWR);
 
     int init = -1;
     for (int i = 1; i < argc; i++) {
