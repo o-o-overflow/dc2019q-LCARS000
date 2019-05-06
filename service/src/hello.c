@@ -23,7 +23,10 @@ static int test_hash(int mode, const void *in, uint32_t size) {
     req.hash_data = shm_alloc(size);
     req.hash_data_size = size;
     memcpy(PARAM_AT(req.hash_data), in, size);
-    Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
     Xwait(crypto_service, -1, &m);
     if (m.type == 0) {
         hexdump(PARAM_FOR(m.from) + m.start, m.size);
@@ -54,7 +57,10 @@ static int test_aes(int mode, int enc, int64_t key, char *in, uint32_t size, cha
         req.cipher_iv_size = AES_BLOCK_SIZE;
         memcpy(PARAM_AT(req.cipher_iv), iv, AES_BLOCK_SIZE);
     }
-    Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
     Xwait(crypto_service, -1, &m);
     if (m.type == 0) {
         hexdump(PARAM_FOR(m.from) + m.start, m.size);

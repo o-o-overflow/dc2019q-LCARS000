@@ -94,7 +94,7 @@ static int64_t app_load(const char *file, const char **err) {
         regions[region_cnt].size = pg.size;
         region_cnt++;
     }
-    Xcheckin(header.name);
+    Xcheckin(header.name, -1);
     *err = "ok";
     return entry;
 fail:

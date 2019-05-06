@@ -76,6 +76,7 @@ static int launch(enum app_ctx ctx, int fd) {
         app->tx = channel_mon[0];
         app->rx = channel_app[1];
         app->ctx = ctx;
+        app->role = -1;
         app->state = STATE_IDLE;
         app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
@@ -160,6 +161,7 @@ static int handle_request(app_t *app) {
         case REQ_CHECKIN:
             if (req.b == sizeof(app->name) && access_ok(req.a, sizeof(app->name))) {
                 strncpy(app->name, PARAM_FOR(app->id) + req.a, sizeof(app->name));
+                app->role = req.c;
                 ret = 0;
             } else {
                 ret = -EINVAL;
@@ -188,6 +190,9 @@ static int handle_request(app_t *app) {
             app_t *a = get_app(req.a);
             if (a == NULL) {
                 ret = -ENOENT;
+                break;
+            } else if (a->role < app->ctx) {
+                ret = -EPERM;
                 break;
             }
             if (query_msg(app, app->id, req.b) != NULL) {
@@ -322,7 +327,7 @@ int main(int argc, char *argv[]) {
 
     append_file(CTX_SYSTEM_APP, "/dev/stdin", 0, FILE_RDWR);
     append_file(CTX_SYSTEM_APP, "/dev/stdout", 1, FILE_RDWR);
-    append_file(CTX_SYSTEM_APP, "/dev/urandom", open("/dev/urandom", O_RDONLY), FILE_RDWR);
+    append_file(CTX_UNTRUSTED_APP, "/dev/urandom", open("/dev/urandom", O_RDONLY), FILE_RDWR);
 
     int init = -1;
     for (int i = 1; i < argc; i++) {

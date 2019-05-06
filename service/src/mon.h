@@ -17,7 +17,8 @@ typedef struct app_struct {
     int pid;
     int tx;
     int rx;
-    enum app_ctx ctx;
+    uint8_t ctx;
+    uint8_t role;
     enum app_state state;
     char name[0x10];
     struct app_request cur_req;

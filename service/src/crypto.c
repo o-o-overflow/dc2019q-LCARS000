@@ -16,7 +16,7 @@ void *__memcpy_chk(void *dst, const void *src, uint64_t size, uint64_t max_size)
 }
 
 int app_main() {
-    Xcheckin("crypto");
+    Xcheckin("crypto", -1);
 
     // register keys
     memset(&keys, 0, sizeof(keys));
@@ -36,6 +36,8 @@ int app_main() {
         read_all(fd, &keys[3], sizeof(AES_KEY));
         _close(fd);
     }
+
+    Xrunas(CTX_UNTRUSTED_APP);
 
     msg_t msg;
     struct crypto_request req;

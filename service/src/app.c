@@ -169,10 +169,10 @@ int Xecho(const char *str) {
     return request(REQ_ECHO, a, len, 0, 0);
 }
 
-int Xcheckin(const char *str) {
+int Xcheckin(const char *str, int role) {
     uint32_t a = shm_alloc(0x10);
     memcpy(PARAM_AT(a), str, 0x10);
-    return request(REQ_CHECKIN, a, 0x10, 0, 0);
+    return request(REQ_CHECKIN, a, 0x10, role, 0);
 }
 
 int Xlookup(const char *str) {

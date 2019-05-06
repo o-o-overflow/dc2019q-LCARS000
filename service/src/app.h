@@ -21,7 +21,7 @@ int read_until(int fd, void *buf, uint64_t size, char delim);
 int read_all(int fd, void *buf, uint64_t total);
 uint32_t shm_alloc(uint32_t size);
 int Xecho(const char *str);
-int Xcheckin(const char *str);
+int Xcheckin(const char *str, int role);
 int Xlookup(const char *str);
 int Xwait(int from, int type, msg_t *msg);
 int Xpost(int to, int type, const void *buf, uint32_t size);
