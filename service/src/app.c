@@ -163,9 +163,9 @@ uint32_t shm_alloc(uint32_t size) {
 }
 
 int Xecho(const char *str) {
-    int len = strlen(str) + 1;
+    int len = strlen(str);
     uint32_t a = shm_alloc(len);
-    strcpy(PARAM_AT(a), str);
+    memcpy(PARAM_AT(a), str, len);
     return request(REQ_ECHO, a, len, 0, 0);
 }
 

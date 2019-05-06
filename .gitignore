@@ -9,3 +9,5 @@
 *.app
 *.bin
 *.elf
+*.raw
+*.sys
