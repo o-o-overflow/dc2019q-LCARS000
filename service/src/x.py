@@ -1,7 +1,8 @@
 from pwn import *
 
-r = process(['./mon', './init.bin', './loader.bin', './echo.bin', './crypto.bin', './hello.bin'])
-# r = process(['strace', '-f', './mon', './io.bin', './loader.bin', './echo.bin', './hello.bin'])
+r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
+    './crypto.sys', './hello.sys', './hello.app', 'root.key'])
+# r = process(['strace', '-f', './mon', './io.sys', './loader.sys', './echo.sys', './hello.sys'])
 
 def download(rfile, lfile):
     with open(lfile) as f:
@@ -9,7 +10,10 @@ def download(rfile, lfile):
         r.sendline('download %s %d' % (rfile, len(blob)))
         r.send(blob)
 
-download('hello.app', 'hello.app')
-r.sendline('run hello.app')
+# download('hello.app', 'hello.app')
+# r.sendline('run hello.app')
+download('untrusted.app', 'untrusted.app')
+r.sendline('run untrusted.app')
+
 
 r.interactive()

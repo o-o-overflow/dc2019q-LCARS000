@@ -344,7 +344,13 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
-            append_file(CTX_KERNEL, argv[i], fd, FILE_EXEC);
+            if (strstr(argv[i], ".sys")) {
+                append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_EXEC);
+            } else if (strstr(argv[i], ".key")) {
+                append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_RDWR);
+            } else {
+                append_file(CTX_KERNEL, argv[i], fd, FILE_RDWR);
+            }
             if (init == -1) {
                 init = fd;
             }

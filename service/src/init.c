@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#define ECHO "echo.bin"
-#define CRYPTO "crypto.bin"
-#define LOADER "loader.bin"
+#define ECHO "echo.sys"
+#define CRYPTO "crypto.sys"
+#define LOADER "loader.sys"
 #define MAX_COMMAND_LENGTH 0x100
 #define MAX_PARAM_COUNT 8
 
@@ -47,7 +47,7 @@ int app_main() {
 
     // drop privileges
     Xrunas(CTX_PLATFORM_APP);
-    Xcheckin("io", -1);
+    Xcheckin("io", CTX_PLATFORM_APP);
 
     char buf[MAX_COMMAND_LENGTH];
     const char *argv[MAX_PARAM_COUNT];
@@ -92,8 +92,10 @@ int app_main() {
                 int fd = download(in, argv[1], atoi(argv[2]));
                 dprintf(out, "download \"%s\" = %d\n", argv[1], fd);
             }
+#ifdef DEBUG
         } else if (!strcmp(argv[0], "open")) {
             dprintf(out, "open \"%s\" = %d\n", argv[1], Xopen(argv[1]));
+#endif
         } else if (!strcmp(argv[0], "exit")) {
             dprintf(out, "bye\n");
             break;

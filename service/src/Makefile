@@ -1,18 +1,18 @@
 .PHONEY: all clean
 
-CFLAGS=-fPIC -Os -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
+CFLAGS=-fPIC -Os -g -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
-PLATFORM_APPS=hello.bin echo.bin init.bin loader.bin crypto.bin
-UNTRUSTED_APPS=hello.app
+SERVICES=hello.sys echo.sys init.sys loader.sys crypto.sys
+APPLETS=hello.app untrusted.app
 
-all: mon $(PLATFORM_APPS) $(UNTRUSTED_APPS)
+all: mon $(SERVICES) $(APPLETS)
 
-.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw
+.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw untrusted.raw
 
 clean:
-	rm -rf *.o *.elf $(PLATFORM_APPS) $(UNTRUSTED_APPS)
+	rm -rf *.o *.elf $(SERVICES) $(APPLETS)
 
 mon: mon.o msg.o fs.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
@@ -24,7 +24,7 @@ mon: mon.o msg.o fs.o
 %.o: %.c
 	$(PREFIX)gcc -c $(CFLAGS) -o $@ $<
 
-%.bin: %.elf
+%.sys: %.elf
 	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
 
 %.app: app.o %.o
