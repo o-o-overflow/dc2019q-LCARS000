@@ -18,7 +18,11 @@ static int download(int fin, const char *file, uint32_t size) {
     } else {
         char buf[0x800];
         for (int i = 0; i < size; ) {
-            int l = _read(fin, &buf, size - i);
+            uint32_t this_read = sizeof(buf);
+            if (this_read > size - i) {
+                this_read = size - i;
+            }
+            int l = _read(fin, &buf, this_read);
             if (l <= 0) {
                 break;
             }
