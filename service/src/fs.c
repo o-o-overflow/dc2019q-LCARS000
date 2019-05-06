@@ -15,17 +15,22 @@ file_t *query_file(const char *name) {
     return NULL;
 }
 
-file_t *open_file(const char *name) {
+file_t *open_file(const char *name, int perm) {
     file_t file;
     strncpy(file.name, name, sizeof(file.name));
     file_t *f = query_file(file.name);
     if (f != NULL) {
-        return f;
+        if (perm & f->perm) {
+            return f;
+        } else {
+            return NULL;
+        }
     }
     if (strchr(file.name, '/') || strchr(file.name, '.')) {
         return NULL;
     }
     file.fd = memfd_create(file.name, 0);
+    file.perm = FILE_RDWR;
     if (file.fd != -1) {
         files[file_cnt] = file;
         return &files[file_cnt++];
@@ -34,9 +39,10 @@ file_t *open_file(const char *name) {
     }
 }
 
-void append_file(const char *name, int fd) {
+void append_file(const char *name, int fd, int perm) {
     if (fd != -1 && file_cnt < MAX_FILE_COUNT) {
         strncpy(files[file_cnt].name, name, sizeof(files[file_cnt].name));
+        files[file_cnt].perm = perm;
         files[file_cnt++].fd = fd;
     }
 }

@@ -28,7 +28,7 @@ static int launch(int fd) {
     }
     int app_id = -1;
     for (int i = 0; i < MAX_APP_COUNT; i++) {
-        if (apps[i].state == STATE_INIT || apps[i].state == STATE_DEAD) {
+        if (apps[i].state == STATE_DEAD) {
             app_id = i;
             break;
         }
@@ -189,9 +189,8 @@ static int handle_request(app_t *app) {
             ret = 0;
             break;
         case REQ_OPEN:
-            // TODO file permissions
             if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
-                file_t *f = open_file(PARAM_FOR(app->id));
+                file_t *f = open_file(PARAM_FOR(app->id), FILE_RDWR);
                 if (f != NULL) {
                     fd = f->fd;
                     ret = 0;
@@ -203,9 +202,8 @@ static int handle_request(app_t *app) {
             }
             break;
         case REQ_EXEC:
-            // TODO exec permissions
             if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
-                file_t *f = open_file(PARAM_FOR(app->id));
+                file_t *f = open_file(PARAM_FOR(app->id), FILE_EXEC);
                 if (f != NULL) {
                     ret = launch(f->fd);
                 } else {
@@ -275,13 +273,13 @@ int main(int argc, char *argv[]) {
 
     sigaction(SIGCHLD, &act, NULL);
 
-    append_file("/dev/stdin", 0);
-    append_file("/dev/stdout", 1);
+    append_file("/dev/stdin", 0, FILE_RDWR);
+    append_file("/dev/stdout", 1, FILE_RDWR);
 
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
-            append_file(argv[i], fd);
+            append_file(argv[i], fd, FILE_RDWR | FILE_EXEC);
             launch(fd);
         }
     }

@@ -17,7 +17,7 @@ int app_main() {
         if (n <= 0) {
             break;
         }
-        buf[n + 1] = 0;
+        buf[n] = 0;
         char *c = strchr(buf, '\n');
         if (c) {
             *c = '\0';
@@ -35,7 +35,10 @@ int app_main() {
         }
         if (!strcmp(argv[0], "run")) {
             dprintf(out, "run \"%s\" = %d\n", argv[1], Xexec(argv[1]));
+        } else if (!strcmp(argv[0], "open")) {
+            dprintf(out, "open \"%s\" = %d\n", argv[1], Xopen(argv[1]));
         } else if (!strcmp(argv[0], "exit")) {
+            dprintf(out, "bye\n");
             break;
         } else {
             dprintf(out, "unrecognized command \"%s\"\n", argv[0]);
