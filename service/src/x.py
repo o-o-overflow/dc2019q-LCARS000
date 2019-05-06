@@ -1,6 +1,6 @@
 from pwn import *
 
-r = process(['./mon', './io.bin', './loader.bin', './echo.bin', './hello.bin'])
+r = process(['./mon', './io.bin', './loader.bin', './echo.bin', './crypto.bin', './hello.bin'])
 # r = process(['strace', '-f', './mon', './io.bin', './loader.bin', './echo.bin', './hello.bin'])
 
 def download(rfile, lfile):
@@ -10,6 +10,7 @@ def download(rfile, lfile):
         r.send(blob)
 
 r.sendline('run echo.bin')
+r.sendline('run crypto.bin')
 download('hello.app', 'hello.app')
 r.sendline('run hello.app')
 
