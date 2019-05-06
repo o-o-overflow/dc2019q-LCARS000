@@ -36,7 +36,7 @@ static int download(int fin, const char *file, uint32_t size) {
 }
 
 int app_main() {
-    Xcheckin("io");
+    Xcheckin("init");
 
     int in = Xopen("/dev/stdin");
     int out = Xopen("/dev/stdout");

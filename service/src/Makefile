@@ -4,12 +4,12 @@ CFLAGS=-fPIC -Os -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
-PLATFORM_APPS=hello.bin echo.bin io.bin loader.bin crypto.bin
+PLATFORM_APPS=hello.bin echo.bin init.bin loader.bin crypto.bin
 UNTRUSTED_APPS=hello.app
 
 all: mon $(PLATFORM_APPS) $(UNTRUSTED_APPS)
 
-.intermediates: hello.elf echo.elf io.elf loader.elf crypto.elf
+.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf
 
 clean:
 	rm -rf *.o *.elf $(PLATFORM_APPS) $(UNTRUSTED_APPS)

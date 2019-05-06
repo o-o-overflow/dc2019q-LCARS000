@@ -1,6 +1,6 @@
 from pwn import *
 
-r = process(['./mon', './io.bin', './loader.bin', './echo.bin', './crypto.bin', './hello.bin'])
+r = process(['./mon', './init.bin', './loader.bin', './echo.bin', './crypto.bin', './hello.bin'])
 # r = process(['strace', '-f', './mon', './io.bin', './loader.bin', './echo.bin', './hello.bin'])
 
 def download(rfile, lfile):
