@@ -150,6 +150,9 @@ int read_all(int fd, void *buf, uint64_t total) {
 }
 
 uint32_t shm_alloc(uint32_t size) {
+    if (size > PARAM_SIZE) {
+        return -1;
+    }
     size = (size + 0xf) >> 4 << 4;
     if (top + size >= PARAM_SIZE) {
         top = 0;
