@@ -14,6 +14,10 @@
 #define ARG_SIZE 0x100000
 #define ARG_FOR(id) (void *)(PARAM_RW + ARG_SIZE * id)
 
+inline int access_ok(uint32_t offset, uint32_t size) {
+    return offset < PARAM_SIZE && size < PARAM_SIZE && offset + size < PARAM_SIZE;
+}
+
 #define MON_TEXT_BASE 0x100000000ULL
 
 #define REQ_ECHO 0

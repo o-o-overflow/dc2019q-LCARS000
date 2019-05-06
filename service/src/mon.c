@@ -121,10 +121,6 @@ static app_t *get_app(int id) {
     return NULL;
 }
 
-static int access_ok(uint32_t offset, uint32_t size) {
-    return offset < PARAM_SIZE && size < PARAM_SIZE && offset + size < PARAM_SIZE;
-}
-
 static int copy_from_app(int id, uint32_t offset, uint32_t size, void *buf, uint32_t max_size) {
     if (!access_ok(offset, size)) {
         return -1;
