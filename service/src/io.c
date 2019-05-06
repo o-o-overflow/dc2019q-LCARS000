@@ -14,7 +14,7 @@ int app_main() {
 
     while (1) {
         int n = read_until(in, &buf, sizeof(buf) - 1, '\n');
-        if (n <= 0) {
+        if (n < 0) {
             break;
         }
         buf[n] = 0;

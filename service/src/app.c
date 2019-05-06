@@ -86,9 +86,14 @@ int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d) {
 }
 
 int read_until(int fd, void *buf, uint64_t size, char delim) {
+    int ret;
     char c;
     for (int i = 0; i < size; i++) {
-        if (_read(fd, &c, 1) <= 0 || c == delim) {
+        if ((ret = _read(fd, &c, 1)) <= 0) {
+            return ret;
+        }
+        if (c == delim) {
+            ((char *)buf)[i] = 0;
             return i;
         }
         ((char *)buf)[i] = c;
