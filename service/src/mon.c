@@ -121,6 +121,21 @@ static app_t *get_app(int id) {
     return NULL;
 }
 
+static int access_ok(uint32_t offset, uint32_t size) {
+    return offset < PARAM_SIZE && size < PARAM_SIZE && offset + size < PARAM_SIZE;
+}
+
+static int copy_from_app(int id, uint32_t offset, uint32_t size, void *buf, uint32_t max_size) {
+    if (!access_ok(offset, size)) {
+        return -1;
+    }
+    if (size > max_size) {
+        size = max_size;
+    }
+    memcpy(buf, PARAM_FOR(id) + offset, size);
+    return size;
+}
+
 static int handle_request(app_t *app) {
     struct app_request req = {0};
     int c = read_all(app->rx, &req, sizeof(req));
@@ -134,11 +149,12 @@ static int handle_request(app_t *app) {
     app->cur_req = req;
     int ret = 0;
     int fd = -1;
+    char name[0x20];
     fprintf(stderr, "got request %d (%#x,%#x,%#x,%#x) from %s\n", req.no, req.a, req.b,
             req.c, req.d, app->name);
     switch (req.no) {
         case REQ_ECHO:
-            if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
+            if (access_ok(req.a, req.b)) {
                 ret = write(1, PARAM_FOR(app->id) + req.a, req.b);
             } else {
                 ret = -EINVAL;
@@ -155,14 +171,14 @@ static int handle_request(app_t *app) {
                 break;
             }
         case REQ_WAIT:
-            if (req.c >= PARAM_SIZE || req.d >= PARAM_SIZE || req.c + req.d >= PARAM_SIZE) {
+            if (!access_ok(req.c, req.d)) {
                 ret = -EINVAL;
                 break;
             }
             accept_msg(app);
             goto done;
         case REQ_POST:
-            if (req.c >= PARAM_SIZE || req.d >= PARAM_SIZE || req.c + req.d >= PARAM_SIZE) {
+            if (!access_ok(req.c, req.d)) {
                 ret = -EINVAL;
                 break;
             }
@@ -189,8 +205,10 @@ static int handle_request(app_t *app) {
             ret = 0;
             break;
         case REQ_OPEN:
-            if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
-                file_t *f = open_file(PARAM_FOR(app->id), FILE_RDWR);
+            if (access_ok(req.a, req.b)
+                    && copy_from_app(app->id, req.a, req.b, &name, 0x20)) {
+                name[0x1f] = 0;
+                file_t *f = open_file(name, FILE_RDWR);
                 if (f != NULL) {
                     fd = f->fd;
                     ret = 0;
@@ -202,8 +220,10 @@ static int handle_request(app_t *app) {
             }
             break;
         case REQ_EXEC:
-            if (req.a < PARAM_SIZE && req.b < PARAM_SIZE && req.a + req.b < PARAM_SIZE) {
-                file_t *f = open_file(PARAM_FOR(app->id), FILE_EXEC);
+            if (access_ok(req.a, req.b)
+                    && copy_from_app(app->id, req.a, req.b, &name, 0x20)) {
+                name[0x1f] = 0;
+                file_t *f = open_file(name, FILE_EXEC);
                 if (f != NULL) {
                     ret = launch(f->fd);
                 } else {
