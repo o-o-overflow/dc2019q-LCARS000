@@ -296,13 +296,19 @@ int main(int argc, char *argv[]) {
     append_file("/dev/stdin", 0, FILE_RDWR);
     append_file("/dev/stdout", 1, FILE_RDWR);
 
+    int init = -1;
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
             append_file(argv[i], fd, FILE_RDWR | FILE_EXEC);
-            launch(fd);
+            if (init == -1) {
+                init = fd;
+            }
         }
     }
+
+    launch(init);
+
     while (1) {
         fd_set set;
         FD_ZERO(&set);
