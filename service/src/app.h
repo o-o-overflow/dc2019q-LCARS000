@@ -15,6 +15,7 @@ int _read(int fd, void *buf, uint64_t size);
 int _munmap(void *buf, uint64_t size);
 int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 int read_until(int fd, void *buf, uint64_t size, char delim);
+int read_all(int fd, void *buf, uint64_t total);
 int Xecho(const char *str);
 int Xcheckin(const char *str);
 int Xlookup(const char *str);

@@ -101,6 +101,19 @@ int read_until(int fd, void *buf, uint64_t size, char delim) {
     return size;
 }
 
+int read_all(int fd, void *buf, uint64_t total) {
+    int i = 0;
+    for (i; i < total; ) {
+        int c = _read(fd, buf + i, total - i);
+        if (c <= 0) {
+            break;
+        } else {
+            i += c;
+        }
+    }
+    return i;
+}
+
 int Xecho(const char *str) {
     int len = strlen(str);
     strcpy(ARG_FOR(0), str);
