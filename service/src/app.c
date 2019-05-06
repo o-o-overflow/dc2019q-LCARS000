@@ -3,6 +3,8 @@
 #include <sys/syscall.h>
 #include <sys/socket.h>
 
+static uint32_t top = 0;
+
 __attribute__((section(".app_start")))
 void _start() {
     _munmap((void *)MON_TEXT_BASE, 0x1000000);
@@ -147,40 +149,56 @@ int read_all(int fd, void *buf, uint64_t total) {
     return i;
 }
 
+uint32_t shm_alloc(uint32_t size) {
+    size = (size + 0xf) >> 4 << 4;
+    if (top + size >= PARAM_SIZE) {
+        top = 0;
+    }
+    uint32_t ret = top;
+    top = (top + size) & (PARAM_SIZE - 1);
+    return ret;
+}
+
 int Xecho(const char *str) {
-    int len = strlen(str);
-    strcpy(ARG_FOR(0), str);
-    return request(REQ_ECHO, 0, len, 0, 0);
+    int len = strlen(str) + 1;
+    uint32_t a = shm_alloc(len);
+    strcpy(PARAM_AT(a), str);
+    return request(REQ_ECHO, a, len, 0, 0);
 }
 
 int Xcheckin(const char *str) {
-    memcpy(ARG_FOR(0), str, 0x10);
-    return request(REQ_CHECKIN, 0, 0, 0, 0);
+    uint32_t a = shm_alloc(0x10);
+    memcpy(PARAM_AT(a), str, 0x10);
+    return request(REQ_CHECKIN, a, 0x10, 0, 0);
 }
 
 int Xlookup(const char *str) {
-    memcpy(ARG_FOR(0), str, 0x10);
-    return request(REQ_LOOKUP, 0, 0, 0, 0);
+    uint32_t a = shm_alloc(0x10);
+    memcpy(PARAM_AT(a), str, 0x10);
+    return request(REQ_LOOKUP, a, 0x10, 0, 0);
 }
 
 int Xwait(int from, int type, msg_t *msg) {
-    int ret = request(REQ_WAIT, from, type, ARG_SIZE * 2, 0x10);
+    uint32_t a = shm_alloc(0x10);
+    int ret = request(REQ_WAIT, from, type, a, 0x10);
     if (ret == 0 && msg != NULL) {
-        memcpy(msg, ARG_FOR(2), 0x10);
+        memcpy(msg, PARAM_AT(a), 0x10);
     }
     return ret;
 }
 
 int Xpost(int to, int type, const void *buf, uint32_t size) {
-    memcpy(ARG_FOR(1), buf, size);
-    int ret = request(REQ_POST, to, type, ARG_SIZE, size);
+    uint32_t a = shm_alloc(size);
+    memcpy(PARAM_AT(a), buf, size);
+    int ret = request(REQ_POST, to, type, a, size);
     return ret;
 }
 
 int Xopen(const char *str) {
-    int len = strlen(str);
-    strcpy(ARG_FOR(0), str);
-    int ret = request(REQ_OPEN, 0, len + 1, 0, 0);
+    int len = strlen(str) + 1;
+    uint32_t a = shm_alloc(len);
+    strcpy(PARAM_AT(a), str);
+    int ret = request(REQ_OPEN, a, len, 0, 0);
     if (ret == 0) {
         struct msghdr msg = {0};
         char c;
@@ -203,7 +221,8 @@ int Xopen(const char *str) {
 }
 
 int Xexec(const char *str) {
-    int len = strlen(str);
-    strcpy(ARG_FOR(0), str);
-    return request(REQ_EXEC, 0, len + 1, 0, 0);
+    int len = strlen(str) + 1;
+    uint32_t a = shm_alloc(len);
+    strcpy(PARAM_AT(a), str);
+    return request(REQ_EXEC, a, len, 0, 0);
 }

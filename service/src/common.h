@@ -11,8 +11,7 @@
 #define PARAM_RO 0x40000000ULL
 #define PARAM_FOR(id) (void *)(PARAM_RO + PARAM_SIZE * id)
 
-#define ARG_SIZE 0x100000
-#define ARG_FOR(id) (void *)(PARAM_RW + ARG_SIZE * id)
+#define PARAM_AT(offset) (void *)(PARAM_RW + offset)
 
 inline int access_ok(uint32_t offset, uint32_t size) {
     return offset < PARAM_SIZE && size < PARAM_SIZE && offset + size < PARAM_SIZE;

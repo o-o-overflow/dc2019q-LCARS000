@@ -31,6 +31,7 @@ static int64_t app_load(const char *file, const char **err) {
     header.name[sizeof(header.name) - 1] = 0;
     int64_t entry = -1;
     int region_cnt = 0;
+    char *tmpbuf = PARAM_AT(shm_alloc(0x1000));
     for (int i = 0; i < header.pages; i++) {
         struct app_page pg = {0};
         ret = read_all(fd, &pg, sizeof(pg));
@@ -72,12 +73,12 @@ static int64_t app_load(const char *file, const char **err) {
             ret = (int64_t)page;
             goto fail;
         }
-        ret = read_all(fd, ARG_FOR(4), pg.size);
+        ret = read_all(fd, tmpbuf, pg.size);
         if (ret < 0) {
             *err = "truncated";
             goto fail;
         }
-        memcpy(page, ARG_FOR(4), pg.size);
+        memcpy(page, tmpbuf, pg.size);
         if ((pg.flags & (PAGE_ALL)) != PAGE_WRITE) {
             ret = _mprotect(page, 0x1000, pg.flags & PAGE_ALL);
             if (ret != 0) {

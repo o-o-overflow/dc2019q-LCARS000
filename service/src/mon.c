@@ -157,15 +157,21 @@ static int handle_request(app_t *app) {
             }
             break;
         case REQ_CHECKIN:
-            strncpy(app->name, PARAM_FOR(app->id), sizeof(app->name));
-            ret = 0;
+            if (req.b == sizeof(app->name) && access_ok(req.a, sizeof(app->name))) {
+                strncpy(app->name, PARAM_FOR(app->id) + req.a, sizeof(app->name));
+                ret = 0;
+            } else {
+                ret = -EINVAL;
+            }
             break;
         case REQ_LOOKUP:
-            {
-                app_t *a = query_app(PARAM_FOR(app->id));
+            if (req.b == sizeof(app->name) && access_ok(req.a, sizeof(app->name))) {
+                app_t *a = query_app(PARAM_FOR(app->id) + req.a);
                 ret = a == NULL ? -ENOENT : a->id;
-                break;
+            } else {
+                ret = -EINVAL;
             }
+            break;
         case REQ_WAIT:
             if (!access_ok(req.c, req.d)) {
                 ret = -EINVAL;
@@ -209,7 +215,7 @@ static int handle_request(app_t *app) {
                     fd = f->fd;
                     ret = 0;
                 } else {
-                    if (query_file(PARAM_FOR(app->id)) != NULL) {
+                    if (query_file(name) != NULL) {
                         // exists but not writable
                         ret = -EACCES;
                     } else {
@@ -228,7 +234,7 @@ static int handle_request(app_t *app) {
                 if (f != NULL) {
                     ret = launch(f->fd);
                 } else {
-                    if (query_file(PARAM_FOR(app->id)) != NULL) {
+                    if (query_file(name) != NULL) {
                         // exists but not executable
                         ret = -EACCES;
                     } else {
