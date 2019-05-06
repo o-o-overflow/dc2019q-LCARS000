@@ -171,7 +171,13 @@ static int handle_request(app_t *app) {
         case REQ_LOOKUP:
             if (req.b == sizeof(app->name) && access_ok(req.a, sizeof(app->name))) {
                 app_t *a = query_app(PARAM_FOR(app->id) + req.a);
-                ret = a == NULL ? -ENOENT : a->id;
+                if (a == NULL) {
+                    ret = -ENOENT;
+                } else if (a->role < app->ctx) {
+                    ret = -EPERM;
+                } else {
+                    ret = a->id;
+                }
             } else {
                 ret = -EINVAL;
             }
