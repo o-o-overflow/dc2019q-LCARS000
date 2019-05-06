@@ -17,6 +17,16 @@ void __exit(int status) {
             );
 }
 
+int _close(int fd) {
+    int res;
+    asm volatile (
+            "syscall\n"
+            :"=a"(res)
+            :"a"(SYS_close),"D"(fd)
+            );
+    return res;
+}
+
 int _sendmsg(int fd, const struct msghdr *msg, int flags) {
     int res;
     asm volatile (

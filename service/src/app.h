@@ -8,6 +8,7 @@
 
 void _start();
 void __exit(int status);
+int _close(int fd);
 int _sendmsg(int fd, const struct msghdr *msg, int flags);
 int _recvmsg(int fd, struct msghdr *msg, int flags);
 int _write(int fd, void *buf, uint64_t size);
