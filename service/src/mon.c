@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
-            append_file(argv[i], fd, FILE_RDWR | FILE_EXEC);
+            append_file(argv[i], fd, FILE_EXEC);
             if (init == -1) {
                 init = fd;
             }
