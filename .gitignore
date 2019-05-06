@@ -6,3 +6,6 @@
 *.nam
 *.til
 .gdb_history
+*.app
+*.bin
+*.elf
