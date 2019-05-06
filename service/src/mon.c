@@ -213,7 +213,12 @@ static int handle_request(app_t *app) {
                     fd = f->fd;
                     ret = 0;
                 } else {
-                    ret = -ENOENT;
+                    if (query_file(PARAM_FOR(app->id)) != NULL) {
+                        // exists but not writable
+                        ret = -EACCES;
+                    } else {
+                        ret = -ENOENT;
+                    }
                 }
             } else {
                 ret = -EINVAL;
@@ -227,7 +232,12 @@ static int handle_request(app_t *app) {
                 if (f != NULL) {
                     ret = launch(f->fd);
                 } else {
-                    ret = -ENOENT;
+                    if (query_file(PARAM_FOR(app->id)) != NULL) {
+                        // exists but not executable
+                        ret = -EACCES;
+                    } else {
+                        ret = -ENOENT;
+                    }
                 }
             } else {
                 ret = -EINVAL;
