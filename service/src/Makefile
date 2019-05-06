@@ -1,22 +1,23 @@
 .PHONEY: all clean
 
-CFLAGS=-fPIC -Os -O2 -g -fno-stack-protector -I/usr/include/x86_64-linux-musl
+CFLAGS=-fPIC -Os -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
-APPS=hello.bin echo.bin io.bin loader.bin
+PLATFORM_APPS=hello.bin echo.bin io.bin loader.bin
+UNTRUSTED_APPS=hello.app
 
-all: mon $(APPS)
+all: mon $(PLATFORM_APPS) $(UNTRUSTED_APPS)
 
 .intermediates: hello.elf echo.elf io.elf loader.elf
 
 clean:
-	rm -rf *.o *.elf $(APPS)
+	rm -rf *.o *.elf $(PLATFORM_APPS) $(UNTRUSTED_APPS)
 
 mon: mon.o msg.o fs.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
 
 %.elf: app.o %.o
-	$(PREFIX)ld -T ld.x -o $@ $^ $(LIBC)
+	$(PREFIX)ld -T papp.x -o $@ $^ $(LIBC)
 	# $(PREFIX)strip $@
 
 %.o: %.c
@@ -24,3 +25,8 @@ mon: mon.o msg.o fs.o
 
 %.bin: %.elf
 	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
+
+%.app: app.o %.o
+	$(PREFIX)ld -T uapp.x -o $*.raw $^ $(LIBC)
+	$(PREFIX)objcopy $*.raw -O binary -j .text -j .data $@
+	python app.py $* $@ $@

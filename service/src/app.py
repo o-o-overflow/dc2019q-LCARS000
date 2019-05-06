@@ -32,7 +32,9 @@ class App(object):
 
 
 if __name__ == '__main__':
-    # test
-    a = App('hello')
-    a.add_segment(0x8000, 5, open('hello.bin').read())
-    open('hello.app', 'w').write(str(a))
+    if len(sys.argv) == 4:
+        name, fin, fout = sys.argv[1:]
+        a = App(name)
+        a.add_segment(0x100000, 5, open(fin).read())
+        a.add_segment(0x200000, 3, '\x00')
+        open(fout, 'w').write(str(a))

@@ -22,7 +22,7 @@ enum page_type {
 struct app_page {
     uint32_t start;
     uint32_t size;
-    enum page_type flags;
+    uint32_t flags;
 };
 
 struct app_region {
