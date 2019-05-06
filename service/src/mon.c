@@ -146,8 +146,8 @@ static int handle_request(app_t *app) {
     int ret = 0;
     int fd = -1;
     char name[0x20];
-    fprintf(stderr, "got request %d (%#x,%#x,%#x,%#x) from %s\n", req.no, req.a, req.b,
-            req.c, req.d, app->name);
+    fprintf(stderr, "%s: %s(%#x,%#x,%#x,%#x)\n", app->name, str_request(req.no),
+            req.a, req.b, req.c, req.d);
     switch (req.no) {
         case REQ_ECHO:
             if (access_ok(req.a, req.b)) {

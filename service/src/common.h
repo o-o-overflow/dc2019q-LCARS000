@@ -27,6 +27,27 @@ inline int access_ok(uint32_t offset, uint32_t size) {
 #define REQ_OPEN 5
 #define REQ_EXEC 6
 
+inline const char *str_request(int32_t no) {
+    switch (no) {
+        case REQ_ECHO:
+            return "echo";
+        case REQ_CHECKIN:
+            return "checkin";
+        case REQ_LOOKUP:
+            return "lookup";
+        case REQ_WAIT:
+            return "wait";
+        case REQ_POST:
+            return "post";
+        case REQ_OPEN:
+            return "open";
+        case REQ_EXEC:
+            return "exec";
+        default:
+            return "unknown";
+    }
+}
+
 struct app_request {
     uint32_t no;
     uint32_t a, b, c, d;
