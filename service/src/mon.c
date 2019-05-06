@@ -254,6 +254,7 @@ response:
         return -1;
     }
     if (fd != -1) {
+        lseek(fd, 0, SEEK_SET);
         struct msghdr msg = {0};
         char buf[CMSG_SPACE(sizeof(fd))] = {0};
         struct iovec iovec = {
