@@ -41,7 +41,7 @@ static int aes_decrypt(struct app_page_crypto *ci, const char *in, char *out, si
     return m.type;
 }
 
-static int64_t app_load(const char *file, const char **err) {
+static int app_load(const char *file, const char **err, struct app_info *info) {
     int fd = Xopen(file);
     if (fd < 0) {
         return fd;
@@ -63,7 +63,6 @@ static int64_t app_load(const char *file, const char **err) {
         return -EINVAL;
     }
     header.name[sizeof(header.name) - 1] = 0;
-    int64_t entry = -1;
     int region_cnt = 0;
     char tmpbuf[0x1000];
     for (int i = 0; i < header.pages; i++) {
@@ -144,17 +143,28 @@ static int64_t app_load(const char *file, const char **err) {
                 goto fail;
             }
         }
-        if (entry < 0) {
-            entry = pg.start;
+        if (pg.flags & PAGE_EXEC) {
+            if (!(pg.flags & PAGE_SIGNED)) {
+                info->ctx = CTX_UNTRUSTED_APP;
+            }
+            if (info->entry == 0) {
+                info->entry = pg.start;
+            }
         }
         regions[region_cnt].start = pg.start;
         regions[region_cnt].end = pg.start + 0x1000;
         regions[region_cnt].size = pg.size;
         region_cnt++;
     }
+    if (info->entry == 0) {
+        // no executable page
+        ret = -ENOEXEC;
+        *err = "noexec";
+        goto fail;
+    }
     Xcheckin(header.name, -1);
     *err = "ok";
-    return entry;
+    return 0;
 fail:
     for (int i = 0; i < region_cnt; i++) {
         _munmap((void *)regions[i].start, regions[i].size);
@@ -167,15 +177,16 @@ int app_main() {
     char name[0x20];
     const char *err = "";
     while (Xwait(-1, 'load', &msg) == 0) {
+        struct app_info info = {0};
         strncpy(name, PARAM_FOR(msg.from) + msg.start, sizeof(name));
         if (msg.size < sizeof(name)) {
             name[msg.size] = 0;
         }
-        int64_t entry = app_load(name, &err);
-        Xpost(msg.from, entry, err, strlen(err) + 1);
-        if (entry > 0) {
-            Xrunas(CTX_UNTRUSTED_APP);
-            ((void (*)())entry)();
+        int ret = app_load(name, &err, &info);
+        Xpost(msg.from, ret, err, strlen(err) + 1);
+        if (ret == 0) {
+            Xrunas(info.ctx);
+            ((void (*)())((uint64_t)info.entry))();
         }
     }
     return 0;

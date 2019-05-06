@@ -46,8 +46,8 @@ int app_main() {
     Xexec(CRYPTO, CTX_KERNEL);
 
     // drop privileges
-    Xrunas(CTX_PLATFORM_APP);
-    Xcheckin("io", CTX_PLATFORM_APP);
+    Xrunas(CTX_SYSTEM_APP);
+    Xcheckin("io", CTX_SYSTEM_APP);
 
     char buf[MAX_COMMAND_LENGTH];
     const char *argv[MAX_PARAM_COUNT];
@@ -73,9 +73,9 @@ int app_main() {
             dprintf(out, "argv[%d] = \"%s\"\n", i, argv[i]);
         }
         if (!strcmp(argv[0], "run")) {
-            int ret = Xexec(argv[1], CTX_PLATFORM_APP);
+            int ret = Xexec(argv[1], CTX_SYSTEM_APP);
             if (ret == -EACCES) {
-                int ldr = Xexec(LOADER, CTX_PLATFORM_APP);
+                int ldr = Xexec(LOADER, CTX_SYSTEM_APP);
                 dprintf(out, "loading at #%d...\n", ldr);
                 if (ldr >= 0 && (ret = Xpost(ldr, 'load', argv[1], strlen(argv[1]) + 1)) == 0) {
                     msg_t msg = {0};

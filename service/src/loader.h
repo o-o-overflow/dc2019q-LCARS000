@@ -12,6 +12,11 @@ struct app_header {
     char name[0x20];
 };
 
+struct app_info {
+    uint32_t entry;
+    uint32_t ctx;
+};
+
 enum page_type {
     PAGE_READ = 1,
     PAGE_WRITE = 2,
