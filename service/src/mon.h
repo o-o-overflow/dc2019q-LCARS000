@@ -19,6 +19,7 @@ typedef struct app_struct {
     int rx;
     uint8_t ctx;
     uint8_t role;
+    uint8_t critical;
     enum app_state state;
     char name[0x10];
     struct app_request cur_req;

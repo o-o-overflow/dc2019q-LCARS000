@@ -43,10 +43,11 @@ int app_main() {
 
     // launch services
     Xexec(ECHO, CTX_SYSTEM_APP);
-    Xexec(CRYPTO, CTX_SYSTEM_APP);
+    Xexec(CRYPTO, CTX_KERNEL);
 
     // drop privileges
     Xrunas(CTX_PLATFORM_APP);
+    Xcheckin("io", -1);
 
     char buf[MAX_COMMAND_LENGTH];
     const char *argv[MAX_PARAM_COUNT];

@@ -77,6 +77,7 @@ static int launch(enum app_ctx ctx, int fd) {
         app->rx = channel_app[1];
         app->ctx = ctx;
         app->role = -1;
+        app->critical = ctx == CTX_KERNEL;
         app->state = STATE_IDLE;
         app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
@@ -305,6 +306,10 @@ static void handler(int signo, siginfo_t *info, void *context) {
     int pid = info->si_pid;
     for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].pid == pid) {
+            if (apps[i].critical) {
+                fprintf(stderr, "%s exit %#x (critical)\n", apps[i].name, info->si_status);
+                exit(0);
+            }
             cleanup(&apps[i]);
             fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
             return ;
@@ -340,7 +345,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    launch(CTX_SYSTEM_APP, init);
+    launch(CTX_KERNEL, init);
 
     while (1) {
         fd_set set;
