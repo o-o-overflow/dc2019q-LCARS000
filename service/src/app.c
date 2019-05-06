@@ -67,6 +67,29 @@ int _read(int fd, void *buf, uint64_t size) {
     return res;
 }
 
+void *_mmap(void *addr, uint64_t length, int prot, int flags, int fd, int offset) {
+    void *res;
+    asm volatile (
+            "movq %5, %%r10\n"
+            "movq %6, %%r8\n"
+            "movq %7, %%r9\n"
+            "syscall\n"
+            :"=a"(res)
+            :"a"(SYS_mmap),"D"(addr),"S"(length),"d"(prot),"r"((int64_t)flags),"r"((int64_t)fd),"r"((int64_t)offset)
+            );
+    return res;
+}
+
+int _mprotect(void *buf, uint64_t size, int prot) {
+    int res;
+    asm volatile (
+            "syscall\n"
+            :"=a"(res)
+            :"a"(SYS_mprotect),"D"(buf),"S"(size),"d"(prot)
+            );
+    return res;
+}
+
 int _munmap(void *buf, uint64_t size) {
     int res;
     asm volatile (
@@ -141,16 +164,16 @@ int Xlookup(const char *str) {
 }
 
 int Xwait(int from, int type, msg_t *msg) {
-    int ret = request(REQ_WAIT, from, type, 0, 0x10);
+    int ret = request(REQ_WAIT, from, type, ARG_SIZE * 2, 0x10);
     if (ret == 0 && msg != NULL) {
-        memcpy(msg, ARG_FOR(0), 0x10);
+        memcpy(msg, ARG_FOR(2), 0x10);
     }
     return ret;
 }
 
 int Xpost(int to, int type, const void *buf, uint32_t size) {
-    memcpy(ARG_FOR(0), buf, size);
-    int ret = request(REQ_POST, to, type, 0, size);
+    memcpy(ARG_FOR(1), buf, size);
+    int ret = request(REQ_POST, to, type, ARG_SIZE, size);
     return ret;
 }
 

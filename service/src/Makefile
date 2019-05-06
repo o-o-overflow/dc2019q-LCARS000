@@ -1,12 +1,13 @@
 .PHONEY: all clean
 
 CFLAGS=-fPIC -Os -O2 -g -fno-stack-protector -I/usr/include/x86_64-linux-musl
+CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
-APPS=hello.bin echo.bin io.bin
+APPS=hello.bin echo.bin io.bin loader.bin
 
 all: mon $(APPS)
 
-.intermediates: hello.elf echo.elf io.elf
+.intermediates: hello.elf echo.elf io.elf loader.elf
 
 clean:
 	rm -rf *.o *.elf $(APPS)

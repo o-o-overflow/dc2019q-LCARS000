@@ -1,9 +1,33 @@
 #include "app.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 
+#define LOADER "loader.bin"
 #define MAX_COMMAND_LENGTH 0x100
 #define MAX_PARAM_COUNT 8
+
+static int download(int fin, const char *file, uint32_t size) {
+    if (size == 0 || size > 0x10000) {
+        return -EFBIG;
+    }
+    int fout = Xopen(file);
+    if (fout < 0) {
+        return -EBADF;
+    } else {
+        char buf[0x800];
+        for (int i = 0; i < size; ) {
+            int l = _read(fin, &buf, size - i);
+            if (l <= 0) {
+                break;
+            }
+            _write(fout, &buf, l);
+            i += l;
+        }
+    }
+    return fout;
+}
 
 int app_main() {
     Xcheckin("io");
@@ -34,7 +58,25 @@ int app_main() {
             dprintf(out, "argv[%d] = \"%s\"\n", i, argv[i]);
         }
         if (!strcmp(argv[0], "run")) {
-            dprintf(out, "run \"%s\" = %d\n", argv[1], Xexec(argv[1]));
+            int ret = Xexec(argv[1]);
+            if (ret == -EACCES) {
+                int ldr = Xexec(LOADER);
+                dprintf(out, "loading at #%d...\n", ldr);
+                if (ldr >= 0 && (ret = Xpost(ldr, 'load', argv[1], strlen(argv[1]) + 1)) == 0) {
+                    msg_t msg = {0};
+                    ret = Xwait(ldr, -1, &msg);
+                    dprintf(out, "loading result %d (%s)...\n", msg.type,
+                            PARAM_FOR(msg.from) + msg.start);
+                }
+            }
+            dprintf(out, "run \"%s\" = %d\n", argv[1], ret);
+        } else if (!strcmp(argv[0], "download")) {
+            if (argc < 3) {
+                dprintf(out, "invalid arguments\n");
+            } else {
+                int fd = download(in, argv[1], atoi(argv[2]));
+                dprintf(out, "download \"%s\" = %d\n", argv[1], fd);
+            }
         } else if (!strcmp(argv[0], "open")) {
             dprintf(out, "open \"%s\" = %d\n", argv[1], Xopen(argv[1]));
         } else if (!strcmp(argv[0], "exit")) {

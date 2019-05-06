@@ -13,6 +13,8 @@ int _sendmsg(int fd, const struct msghdr *msg, int flags);
 int _recvmsg(int fd, struct msghdr *msg, int flags);
 int _write(int fd, void *buf, uint64_t size);
 int _read(int fd, void *buf, uint64_t size);
+void *_mmap(void *addr, uint64_t length, int prot, int flags, int fd, int offset);
+int _mprotect(void *buf, uint64_t size, int prot);
 int _munmap(void *buf, uint64_t size);
 int request(uint32_t no, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 int read_until(int fd, void *buf, uint64_t size, char delim);
