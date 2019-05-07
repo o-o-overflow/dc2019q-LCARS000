@@ -1,5 +1,6 @@
 #include "app.h"
 #include "crypto.h"
+#include "certs.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -8,8 +9,8 @@
 static int echo_service;
 static int crypto_service;
 
-static void hexdump(void *raw, uint32_t size) {
-    char buf[0x100];
+static void hexdump(const void *raw, uint32_t size) {
+    char buf[0x400];
     for (int i = 0; i < size; i++) {
         sprintf(&buf[i * 2], "%02x", ((uint8_t *)raw)[i]);
     }
@@ -70,6 +71,23 @@ static int test_aes(int mode, int enc, int64_t key, char *in, uint32_t size, cha
     return m.type;
 }
 
+static int test_rsa(int cert, const void *in, const uint32_t size) {
+    struct crypto_request req = {0};
+    msg_t m = {0};
+    req.type = CRYPTO_DECRYPT_RSA;
+    req.sig_cert_id = cert;
+    req.sig_data = shm_alloc(size);
+    req.sig_data_size = size;
+    memcpy(PARAM_AT(req.sig_data), in, size);
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
+    Xwait(crypto_service, -1, &m);
+    Xecho(PARAM_FOR(m.from) + m.start);
+    return m.type;
+}
+
 static void test_echo() {
     const char *msg[] = {
         "hello world",
@@ -98,5 +116,7 @@ int app_main() {
     test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x40, zero);
     test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x40, A);
     test_aes(CRYPTO_MODE_CBC, 1, CRYPTO_KEY_PROVISION, zero, 0x40, A);
+    test_rsa(CRYPTO_CERT_SYSTEM, test_system, test_system_len);
+    test_rsa(CRYPTO_CERT_PLATFORM, test_platform, test_platform_len);
     return 0;
 }

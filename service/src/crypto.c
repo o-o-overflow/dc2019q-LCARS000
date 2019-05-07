@@ -1,19 +1,18 @@
 #include "app.h"
 #include "crypto.h"
+#include "certs.h"
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#define XMALLOC_USER
 #define WC_NO_HARDEN
 #define WOLFSSL_AES_DIRECT
 #include <wolfssl/wolfcrypt/hash.h>
 #include <wolfssl/wolfcrypt/aes.h>
+#include <wolfssl/wolfcrypt/rsa.h>
 
 static AES_KEY keys[4];
-
-// hack for wolfssl
-void *__memcpy_chk(void *dst, const void *src, uint64_t size, uint64_t max_size) {
-    return memcpy(dst, src, size);
-}
+static RsaKey certs[2];
 
 int app_main() {
     Xcheckin("crypto", -1);
@@ -36,6 +35,14 @@ int app_main() {
         read_all(fd, &keys[3], sizeof(AES_KEY));
         _close(fd);
     }
+
+    // register certs
+    int dummy = 0;
+    wc_InitRsaKey(&certs[0], NULL);
+    wc_RsaPublicKeyDecode(system_pub, &dummy, &certs[0], system_pub_len);
+    wc_InitRsaKey(&certs[1], NULL);
+    dummy = 0;
+    wc_RsaPublicKeyDecode(platform_pub, &dummy, &certs[1], platform_pub_len);
 
     Xrunas(CTX_UNTRUSTED_APP);
 
@@ -164,6 +171,25 @@ int app_main() {
                     if (ret == 0) {
                         result = PARAM_AT(a);
                         length = req.cipher_data_size;
+                    }
+                }
+                break;
+            case CRYPTO_DECRYPT_RSA:
+                if (!access_ok(req.sig_data, req.sig_data_size)) {
+                    ret = -EFAULT;
+                    result = "access";
+                } else if ((req.sig_cert_id != CRYPTO_CERT_SYSTEM && req.sig_cert_id != CRYPTO_CERT_PLATFORM) || req.sig_data_size != 0x100) {
+                    ret = -EINVAL;
+                    result = "cert";
+                } else {
+                    uint32_t a = shm_alloc(0x100);
+                    ret = wc_RsaSSL_Verify(PARAM_FOR(msg.from) + req.sig_data, req.sig_data_size, PARAM_AT(a), 0x100, &certs[req.sig_cert_id]);
+                    if (ret >= 0) {
+                        result = PARAM_AT(a);
+                        length = ret;
+                        ret = 0;
+                    } else {
+                        result = "verify";
                     }
                 }
                 break;

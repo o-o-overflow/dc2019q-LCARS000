@@ -6,20 +6,34 @@ LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=hello.sys echo.sys init.sys loader.sys crypto.sys
 APPLETS=hello.app untrusted.app
+KEYS=system.pub system.priv platform.pub platform.priv
 
-all: mon $(SERVICES) $(APPLETS)
+all: certs.h mon $(SERVICES) $(APPLETS)
 
-.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw untrusted.raw
+.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw untrusted.raw $(KEYS)
 
 clean:
-	rm -rf *.o *.elf $(SERVICES) $(APPLETS)
+	rm -rf *.o *.elf *.raw $(SERVICES) $(APPLETS)
+
+clean-all: clean
+	rm $(KEYS)
 
 mon: mon.o msg.o fs.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
 
 %.elf: app.o %.o
-	$(PREFIX)ld -T papp.x -o $@ $^ $(LIBWOLFSSL) $(LIBC)
+	$(PREFIX)ld -T papp.x -o $@ $^ $(LIBC)
 	# $(PREFIX)strip $@
+
+crypto.elf: app.o crypto.o gnu-c.o certs.h
+	$(PREFIX)ld -T papp.x -o $@ app.o crypto.o $(LIBWOLFSSL) gnu-c.o $(LIBC) \
+		/usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a \
+		--ignore-unresolved-symbol __strcat_chk \
+		--ignore-unresolved-symbol __snprintf_chk \
+		--ignore-unresolved-symbol __strncat_chk \
+		--ignore-unresolved-symbol __strncpy_chk \
+		--ignore-unresolved-symbol __fprintf_chk \
+		--error-unresolved-symbols
 
 %.o: %.c
 	$(PREFIX)gcc -c $(CFLAGS) -o $@ $<
@@ -30,4 +44,19 @@ mon: mon.o msg.o fs.o
 %.app: app.o %.o
 	$(PREFIX)ld -T uapp.x -o $*.raw $^ $(LIBC)
 	$(PREFIX)objcopy $*.raw -O binary -j .text -j .data $*.raw
-	python app.py $* $*.raw $@
+	python app.py $* $*.raw 2 > $@
+
+%.priv:
+	openssl genrsa -out $@ 2048
+
+%.pub:	%.priv
+	openssl rsa -in $< -out $@ -outform der -pubout
+
+certs.h: system.pub platform.pub
+	xxd -i system.pub > $@
+	xxd -i platform.pub >> $@
+	python app.py 0 system_app > test_system
+	python app.py 1 platform_app > test_platform
+	xxd -i test_system >> $@
+	xxd -i test_platform >> $@
+	sed -i 's/unsigned/const unsigned/' $@

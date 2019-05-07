@@ -9,7 +9,7 @@ enum crypto_type {
     CRYPTO_HASH_SHA256,
     CRYPTO_ENCRYPT_AES,
     CRYPTO_DECRYPT_AES,
-    CRYPTO_CIPHER_RSA,
+    CRYPTO_DECRYPT_RSA,
 };
 
 enum crypto_key {
@@ -17,6 +17,11 @@ enum crypto_key {
     CRYPTO_KEY_PROVISION,
     CRYPTO_KEY_USER,
     CRYPTO_KEY_SESSION,
+};
+
+enum crypto_cert {
+    CRYPTO_CERT_SYSTEM,
+    CRYPTO_CERT_PLATFORM,
 };
 
 enum crypto_mode {
@@ -42,7 +47,11 @@ struct crypto_request {
             uint32_t cipher_iv;
             uint32_t cipher_iv_size;
         };
-        // TODO signature
+        struct {
+            uint8_t sig_cert_id;
+            uint32_t sig_data;
+            uint32_t sig_data_size;
+        };
     };
 };
 
