@@ -21,38 +21,40 @@ def sign(c, m):
     return CERTS[int(c)].decrypt(pad(m))
 
 class Page(object):
-    def __init__(self, base, prot, raw='', key=-1):
+    def __init__(self, base, prot, raw='', key=0xff):
         assert len(raw) <= 0x1000
         self.base = base
         self.raw = raw
         self.prot = prot
         self.key = key
+        self.cert = key
 
     def encrypt(self, key):
         pass
 
     def __str__(self):
-        if self.key == -1:
+        if self.key == 0xff:
             data = self.raw
             prot = self.prot
         else:
             iv = open('/dev/urandom').read(16)
             K = KEYS[self.key]
-            hdr = chr(1) + chr(self.key) + K + iv
-            assert len(hdr) == 0x32
+            hdr = K + iv
+            assert len(hdr) == 0x30
             while len(self.raw) % 0x10:
                 self.raw += '\x00'
             data = hdr + AES.new(key=K, mode=AES.MODE_CBC,
                     IV=iv).encrypt(self.raw)
             prot = self.prot | 8
-        return struct.pack('<III', self.base, len(self.raw), prot) + data
+        return struct.pack('<IIBBBB', self.base, len(self.raw), prot, 1,
+                self.key, self.cert) + data
 
 class App(object):
     def __init__(self, name='app'):
         self.name = name.ljust(0x20, '\x00')[:0x20]
         self.pages = []
 
-    def add_segment(self, base, prot, raw, key=-1):
+    def add_segment(self, base, prot, raw, key=0xff):
         for i in xrange(0, len(raw), 0x1000):
             self.pages.append(Page(base + i, prot, raw[i:i + 0x1000], key))
 

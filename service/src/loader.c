@@ -9,14 +9,14 @@
 
 static struct app_region regions[MAX_PAGE_COUNT];
 
-static int aes_decrypt(struct app_page_crypto *ci, const char *in, char *out, size_t size) {
+static int aes_decrypt(struct app_page *pg, struct app_page_crypto *ci, const char *in, char *out, size_t size) {
     int crypto_service = Xlookup("crypto");
     struct crypto_request req = {0};
     msg_t m = {0};
     req.type = CRYPTO_DECRYPT_AES;
-    req.cipher_key_id = ci->key_id;
+    req.cipher_key_id = pg->c_key;
     req.cipher_size = 256;
-    req.cipher_mode = ci->mode;
+    req.cipher_mode = pg->c_mode;
     req.cipher_key = shm_alloc(sizeof(AES_KEY));
     req.cipher_key_size = sizeof(AES_KEY);
     memcpy(PARAM_AT(req.cipher_key), ci->key, sizeof(AES_KEY));
@@ -77,14 +77,15 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
             // TODO check signature
         }
         if (pg.flags & PAGE_ENCRYPTED) {
+            if ((pg.c_mode != CRYPTO_MODE_ECB && pg.c_mode != CRYPTO_MODE_CBC)
+                    || pg.c_key > CRYPTO_KEY_SESSION) {
+                ret = -EINVAL;
+                *err = "crypto param";
+                goto fail;
+            }
             ret = read_all(fd, &c, sizeof(c));
             if (ret < 0) {
                 *err = "crypto info";
-                goto fail;
-            } else if ((c.mode != CRYPTO_MODE_ECB && c.mode != CRYPTO_MODE_CBC)
-                    || c.key_id > CRYPTO_KEY_SESSION) {
-                ret = -EINVAL;
-                *err = "crypto param";
                 goto fail;
             }
         }
@@ -128,7 +129,7 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
             goto fail;
         }
         if (pg.flags & PAGE_ENCRYPTED) {
-            ret = aes_decrypt(&c, tmpbuf, page, pg.size);
+            ret = aes_decrypt(&pg, &c, tmpbuf, page, pg.size);
             if (ret < 0) {
                 *err = "decrypt";
                 goto fail;

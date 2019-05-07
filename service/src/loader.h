@@ -29,17 +29,19 @@ enum page_type {
 struct app_page {
     uint32_t start;
     uint32_t size;
-    uint32_t flags;
+    uint8_t flags;
+    uint8_t c_mode;
+    uint8_t c_key;
+    uint8_t s_cert;
 };
 
 struct app_page_crypto {
-    uint8_t mode;
-    uint8_t key_id;
     uint8_t key[0x20];
     uint8_t iv[0x10];
 };
 
 struct app_page_sig {
+    uint8_t sig[0x100];
 };
 
 struct app_region {
