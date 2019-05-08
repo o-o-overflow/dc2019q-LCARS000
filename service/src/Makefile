@@ -4,19 +4,20 @@ CFLAGS=-fPIC -Os -g -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
-SERVICES=hello.sys echo.sys init.sys loader.sys crypto.sys
-APPLETS=hello.app untrusted.app system.app platform.app
+SERVICES=echo.sys init.sys loader.sys crypto.sys
+APPLETS=test.app untrusted.app system.app platform.app
 KEYS=system.pub system.priv platform.pub platform.priv
+CERTS=certs.h certs-test.h
 
-all: certs.h mon $(SERVICES) $(APPLETS)
+all: $(CERTS) mon $(SERVICES) $(APPLETS)
 
-.intermediates: hello.elf echo.elf init.elf loader.elf crypto.elf hello.raw untrusted.raw $(KEYS)
+.intermediates: test.elf echo.elf init.elf loader.elf crypto.elf test.raw untrusted.raw $(KEYS)
 
 clean:
 	rm -rf *.o *.elf *.raw $(SERVICES) $(APPLETS)
 
 clean-all: clean
-	rm $(KEYS)
+	rm $(KEYS) $(CERTS)
 
 mon: mon.o msg.o fs.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
@@ -60,11 +61,14 @@ platform.app: untrusted.raw app.py
 %.pub:	%.priv
 	openssl rsa -in $< -out $@ -outform der -pubout
 
-certs.h: system.pub platform.pub app.py
+certs.h: system.pub platform.pub
 	xxd -i system.pub > $@
 	xxd -i platform.pub >> $@
+	sed -i 's/unsigned/const unsigned/' $@
+
+certs-test.h: app.py
 	python app.py 0 system_app > test_system
 	python app.py 1 platform_app > test_platform
-	xxd -i test_system >> $@
+	xxd -i test_system > $@
 	xxd -i test_platform >> $@
 	sed -i 's/unsigned/const unsigned/' $@

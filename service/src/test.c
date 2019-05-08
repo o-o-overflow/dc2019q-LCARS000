@@ -1,6 +1,7 @@
 #include "app.h"
 #include "crypto.h"
 #include "certs.h"
+#include "certs-test.h"
 #include <stdio.h>
 #include <string.h>
 
