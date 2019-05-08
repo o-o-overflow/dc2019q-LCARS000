@@ -1,6 +1,6 @@
 # DEFCON 2019 Quals Life
 
-[![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-template.svg?token=6XM5nywRvLrMFwxAsXj3&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-template)
+[![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-life.svg?token=UsYquYpUiJ6uJsajRAzb&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-life)
 
 This challenge contains 3 flags.
 
