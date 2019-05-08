@@ -9,5 +9,11 @@
 *.app
 *.bin
 *.elf
-*.raw
 *.sys
+*.sapp
+*.papp
+*.uapp
+*.priv
+*.pub
+flag*.h
+certs*.h

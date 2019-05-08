@@ -5,16 +5,21 @@ CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=echo.sys init.sys loader.sys crypto.sys
-APPLETS=test.app untrusted.app system.app platform.app
+APPLETS=svc.uapp perm.uapp perm.papp perm.sapp
 KEYS=system.pub system.priv platform.pub platform.priv
 CERTS=certs.h certs-test.h
+FLAGS=flag1.h
 
-all: $(CERTS) mon $(SERVICES) $(APPLETS)
+all: $(FLAGS) $(CERTS) mon $(SERVICES) $(APPLETS)
 
-.intermediates: test.elf echo.elf init.elf loader.elf crypto.elf test.raw untrusted.raw $(KEYS)
+.intermediates: flag1 \
+	$(KEYS) \
+	echo.sys.elf init.sys.elf loader.sys.elf crypto.sys.elf \
+	svc.app.elf perm.app.elf \
+	svc.app perm.app
 
 clean:
-	rm -rf *.o *.elf *.raw $(SERVICES) $(APPLETS)
+	rm -rf *.o *.elf *.sys *.app $(SERVICES) $(APPLETS)
 
 clean-all: clean
 	rm $(KEYS) $(CERTS)
@@ -22,12 +27,20 @@ clean-all: clean
 mon: mon.o msg.o fs.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
 
-%.elf: app.o %.o
-	$(PREFIX)ld -T papp.x -o $@ $^ $(LIBC)
-	# $(PREFIX)strip $@
+%.sys.elf: app.o %.o
+	$(PREFIX)ld -T sys.x -o $@ $^ $(LIBC)
 
-crypto.elf: app.o crypto.o gnu-c.o certs.h
-	$(PREFIX)ld -T papp.x -o $@ app.o crypto.o $(LIBWOLFSSL) gnu-c.o $(LIBC) \
+%.sys: %.sys.elf
+	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
+
+%.app.elf: app.o %.o
+	$(PREFIX)ld -T app.x -o $@ $^ $(LIBC)
+
+%.app: %.app.elf
+	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
+
+crypto.sys.elf: app.o crypto.o gnu-c.o certs.h
+	$(PREFIX)ld -T sys.x -o $@ app.o crypto.o $(LIBWOLFSSL) gnu-c.o $(LIBC) \
 		/usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a \
 		--ignore-unresolved-symbol __strcat_chk \
 		--ignore-unresolved-symbol __snprintf_chk \
@@ -39,21 +52,14 @@ crypto.elf: app.o crypto.o gnu-c.o certs.h
 %.o: %.c
 	$(PREFIX)gcc -c $(CFLAGS) -o $@ $<
 
-%.sys: %.elf
-	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
+%.sapp: %.app app.py
+	python app.py $* $< 0 > $@
 
-%.raw: app.o %.o
-	$(PREFIX)ld -T uapp.x -o $@.elf $^ $(LIBC)
-	$(PREFIX)objcopy $@.elf -O binary -j .text -j .data $@
+%.papp: %.app app.py
+	python app.py $* $< 1 > $@
 
-%.app: %.raw app.py
+%.uapp: %.app app.py
 	python app.py $* $< 2 > $@
-
-system.app: untrusted.raw app.py
-	python app.py $@ $< 0 > $@
-
-platform.app: untrusted.raw app.py
-	python app.py $@ $< 1 > $@
 
 %.priv:
 	openssl genrsa -out $@ 2048
@@ -70,5 +76,11 @@ certs-test.h: app.py
 	python app.py 0 system_app > test_system
 	python app.py 1 platform_app > test_platform
 	xxd -i test_system > $@
+	rm test_system
 	xxd -i test_platform >> $@
+	rm test_platform
+	sed -i 's/unsigned/const unsigned/' $@
+
+flag%.h: flag%
+	xxd -i $< > $@
 	sed -i 's/unsigned/const unsigned/' $@
