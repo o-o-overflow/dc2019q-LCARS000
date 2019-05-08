@@ -5,18 +5,17 @@ CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=echo.sys init.sys loader.sys crypto.sys
-APPLETS=svc.uapp perm.uapp perm.papp perm.sapp
+APPLETS=svc.uapp perm.uapp perm.papp perm.sapp flag1.papp
 KEYS=system.pub system.priv platform.pub platform.priv
 CERTS=certs.h certs-test.h
 FLAGS=flag1.h
 
 all: $(FLAGS) $(CERTS) mon $(SERVICES) $(APPLETS)
 
-.intermediates: flag1 \
-	$(KEYS) \
+.intermediates: $(KEYS) \
 	echo.sys.elf init.sys.elf loader.sys.elf crypto.sys.elf \
-	svc.app.elf perm.app.elf \
-	svc.app perm.app
+	svc.app.elf perm.app.elf flag1.app.elf \
+	svc.app perm.app flag1.app
 
 clean:
 	rm -rf *.o *.elf *.sys *.app $(SERVICES) $(APPLETS)
@@ -81,6 +80,6 @@ certs-test.h: app.py
 	rm test_platform
 	sed -i 's/unsigned/const unsigned/' $@
 
-flag%.h: flag%
+flag%.h: flag%.txt
 	xxd -i $< > $@
 	sed -i 's/unsigned/const unsigned/' $@

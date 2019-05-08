@@ -118,11 +118,9 @@ int app_main() {
                             break;
                         }
                         memcpy(&keys[CRYPTO_KEY_USER], PARAM_FOR(msg.from) + req.cipher_key, sizeof(AES_KEY));
-                    } else if ((req.cipher_key_id == CRYPTO_KEY_ROOT
-                                || req.cipher_key_id == CRYPTO_KEY_SESSION)
-                            && req.type == CRYPTO_ENCRYPT_AES) {
-                        // root/session keys are unknown to user, they are
-                        // not alloed in encryption
+                    } else if (req.cipher_key_id == CRYPTO_KEY_ROOT && req.type == CRYPTO_ENCRYPT_AES) {
+                        // root keys are unknown to user, it's not allowed
+                        // in encryption
                         ret = -EPERM;
                         result = "denied";
                         break;

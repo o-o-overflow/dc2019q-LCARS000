@@ -1,7 +1,7 @@
 from pwn import *
 
 r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
-    './crypto.sys', './svc.uapp', 'root.key'])
+    './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp'])
 
 def download(app):
     with open(app) as f:
