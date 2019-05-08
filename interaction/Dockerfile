@@ -11,10 +11,7 @@ run echo "travis_fold:start:DIpip\033[33;1minteractions Dockerfile pip\033[0m" &
     pip install -r requirements.txt && \
     echo "\ntravis_fold:end:DIpip\r"
 
-COPY exploit1.py /exploit1.py
-COPY exploit2.sh /exploit2.sh
-
-COPY check1.py /check1.py
-COPY check2.sh /check2.sh
-
-
+COPY exp1.py /exp1.py
+COPY exp1.uapp /exp1.uapp
+COPY exp2.py /exp2.py
+COPY flag1.papp /flag1.papp

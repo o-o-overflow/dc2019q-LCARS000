@@ -1,4 +1,6 @@
 #!/bin/sh
 
 exec 2>/dev/null
-timeout -k1 240 stdbuf -i0 -o0 -e0 /service
+timeout -k1 240 stdbuf -i0 -o0 -e0 /mon \
+    init.sys loader.sys echo.sys crypto.sys \
+    root.key flag1.papp flag2.txt 2>&1

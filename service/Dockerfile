@@ -4,9 +4,13 @@ run echo "travis_fold:start:Dapt\033[33;1mservice Dockerfile apt\033[0m" && \
     echo "\ntravis_fold:end:Dapt\r"
 # python3-pip, etc.
 
-copy src/config.py /
-copy src/service.c /service.c
-copy service /service
+run apt-get install -qq gdb strace
+
+copy public/mon /mon
+copy public/init.sys /init.sys
+copy public/loader.sys /loader.sys
+copy public/crypto.sys /crypto.sys
+copy public/echo.sys /echo.sys
 # Currently anything that goes in public files must be pre-built and checked in git
 # Can still build other things locally though
 #run clang -std=gnu99 -o /service /service.c \
@@ -15,7 +19,9 @@ copy service /service
 #    && apt-get -y autoremove
 
 # Or, include the flag file in the repository
-run touch /flag && chmod 644 /flag && echo "OOO{this is a test flag}" > /flag
+copy src/flag1.papp /flag1.papp
+copy src/flag2.txt /flag2.txt
+copy src/flag3.txt /flag3.txt
 
 copy service.conf /service.conf
 copy wrapper /wrapper
