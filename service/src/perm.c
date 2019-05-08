@@ -26,5 +26,7 @@ int app_main() {
     DEBUG("open platform file = %d\n", Xopen("perm.uapp"));
     DEBUG("open global file = %d\n", Xopen("svc.uapp"));
     DEBUG("open untrusted file = %d\n", Xopen("not exists"));
+    DEBUG("open flag1.papp = %d\n", Xopen("flag1.papp"));
+    DEBUG("open flag2.txt = %d\n", Xopen("flag2.txt"));
     return 0;
 }
