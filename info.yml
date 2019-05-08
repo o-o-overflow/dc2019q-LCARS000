@@ -9,7 +9,7 @@ violates_flag_format: false # if this is not "true", the flag is verfied against
 # At some point we may start blocking all egress connections. Set this to True if your service needs them. DO NOT RELY ON THIS FOR BLOCKING THOUGH.
 allow_egress: False
 
-flag: "OOO{this is a test flag}" # this is the flag of the service
+flag: "OOO{this is test flag1}" # this is the flag of the service
 
 # Type can be normal or king_of_the_hill
 type: normal
@@ -39,5 +39,4 @@ public_files:
 # Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if the flag was captured correctly. 
 # The paths are absolute in the `interaction` docker container.
 interactions:
-  - /exp1.py
-  - /exp2.py
+  - /exploit1.py

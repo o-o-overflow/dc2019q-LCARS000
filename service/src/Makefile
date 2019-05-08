@@ -25,7 +25,7 @@ clean-all: clean
 
 release: all
 	cp mon echo.sys crypto.sys loader.sys init.sys ../public
-	cp exp1.uapp flag1.papp app.py ../../interaction
+	cp exp1.uapp flag1.papp ../../interaction
 
 mon: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
