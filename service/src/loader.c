@@ -271,6 +271,7 @@ int app_main() {
     msg_t msg;
     char name[0x20];
     const char *err = "";
+    Xcheckin("loader", -1);
     while (Xwait(-1, 'load', &msg) == 0) {
         struct app_info info = {0};
         strncpy(name, PARAM_FOR(msg.from) + msg.start, sizeof(name));

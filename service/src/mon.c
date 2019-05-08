@@ -78,10 +78,11 @@ static int launch(enum app_ctx ctx, int fd) {
         app->tx = channel_mon[0];
         app->rx = channel_app[1];
         app->ctx = ctx;
-        app->role = -1;
+        app->role = ctx;
         app->critical = ctx == CTX_KERNEL;
         app->state = STATE_IDLE;
-        app->msg = NULL;
+        // FIXME intended bug: msg uaf to bypass access control
+        // app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
     }
     return app_id;
@@ -89,7 +90,9 @@ static int launch(enum app_ctx ctx, int fd) {
 
 static void cleanup(app_t *app) {
     close(app->tx);
+    close(app->rx);
     app->tx = -1;
+    app->rx = -1;
     app->state = STATE_DEAD;
 }
 
