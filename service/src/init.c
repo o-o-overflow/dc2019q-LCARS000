@@ -69,9 +69,11 @@ int app_main() {
             *space = '\0';
             argv[argc++] = ++space;
         }
+#ifdef DEBUG
         for (int i = 0; i < argc; i++) {
             dprintf(out, "argv[%d] = \"%s\"\n", i, argv[i]);
         }
+#endif
         if (!strcmp(argv[0], "run")) {
             int ret = Xexec(argv[1], CTX_SYSTEM_APP);
             if (ret == -EACCES) {
