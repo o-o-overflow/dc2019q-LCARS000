@@ -2,9 +2,8 @@
 service_name: "life"
 description: "This is a life."
 tags:
-  - reverse
-  - pwn
-  - crypto
+  - misc # it's mixed
+
 violates_flag_format: false # if this is not "true", the flag is verfied against the flag format
 
 # At some point we may start blocking all egress connections. Set this to True if your service needs them. DO NOT RELY ON THIS FOR BLOCKING THOUGH.
