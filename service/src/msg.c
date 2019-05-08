@@ -46,13 +46,14 @@ void append_msg(app_t *app, msg_t *msg) {
 }
 
 int accept_msg(app_t *app) {
-    if (app->cur_req.no != REQ_WAIT) {
+    if (app->cur_req.no != REQ_WAIT || app->state != STATE_BUSY) {
         return -1;
     }
     int from = app->cur_req.a;
     int type = app->cur_req.b;
     msg_t *msg = delete_msg(app, from, type);
     if (msg == NULL) {
+        // no messages to reply
         return -1;
     }
     int len = app->cur_req.d;
@@ -62,6 +63,7 @@ int accept_msg(app_t *app) {
     memcpy(PARAM_FOR(app->id) + app->cur_req.c, msg, len);
     free(msg);
     app->cur_req.no = -1;
+    app->state = STATE_IDLE;
     int res = 0;
     if (write(app->tx, &res, sizeof(res)) != sizeof(res)) {
         perror("write");

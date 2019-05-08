@@ -155,7 +155,6 @@ static int handle_request(app_t *app) {
         perror("read");
         return -1;
     }
-    app->cur_req = req;
     int ret = 0;
     int fd = -1;
     char name[0x20];
@@ -163,6 +162,12 @@ static int handle_request(app_t *app) {
         fprintf(stderr, "%s: %s(%#x,%#x,%#x,%#x)\n", app->name, str_request(req.no),
                 req.a, req.b, req.c, req.d);
     }
+    if (app->state != STATE_IDLE) {
+        ret = -EBUSY;
+        goto response;
+    }
+    // app->state protects app->cur_req: only STATE_IDLE can update cur_req
+    app->cur_req = req;
     switch (req.no) {
         case REQ_ECHO:
             if (access_ok(req.a, req.b)) {
@@ -199,6 +204,7 @@ static int handle_request(app_t *app) {
                 ret = -EINVAL;
                 break;
             }
+            app->state = STATE_BUSY;
             accept_msg(app);
             goto done;
         case REQ_POST:
@@ -289,6 +295,7 @@ static int handle_request(app_t *app) {
     }
 response:
     app->cur_req.no = -1;
+    app->state = STATE_IDLE;
     if (write(app->tx, &ret, sizeof(ret)) != sizeof(ret)) {
         perror("write");
         return -1;
