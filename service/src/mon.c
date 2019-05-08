@@ -45,7 +45,8 @@ static int launch(enum app_ctx ctx, int fd) {
     }
     if (!pid) {
         mremap(PARAM_FOR(app_id), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW);
-        mprotect((void *)PARAM_RO, PARAM_SIZE * MAX_APP_COUNT, PROT_READ);
+        mprotect(PARAM_FOR(0), PARAM_SIZE * app_id, PROT_READ);
+        mprotect(PARAM_FOR(app_id + 1), PARAM_SIZE * (MAX_APP_COUNT - app_id - 1), PROT_READ);
 
         mmap((void *)(APP_DATA_BASE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
