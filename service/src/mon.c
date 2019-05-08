@@ -14,6 +14,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+static int debug = 0; // hacker friendly
+
 static app_t apps[MAX_APP_COUNT];
 
 static int launch(enum app_ctx ctx, int fd) {
@@ -149,8 +151,10 @@ static int handle_request(app_t *app) {
     int ret = 0;
     int fd = -1;
     char name[0x20];
-    fprintf(stderr, "%s: %s(%#x,%#x,%#x,%#x)\n", app->name, str_request(req.no),
-            req.a, req.b, req.c, req.d);
+    if (debug) {
+        fprintf(stderr, "%s: %s(%#x,%#x,%#x,%#x)\n", app->name, str_request(req.no),
+                req.a, req.b, req.c, req.d);
+    }
     switch (req.no) {
         case REQ_ECHO:
             if (access_ok(req.a, req.b)) {
@@ -313,15 +317,21 @@ static void handler(int signo, siginfo_t *info, void *context) {
     for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].pid == pid) {
             if (apps[i].critical) {
-                fprintf(stderr, "%s exit %#x (critical)\n", apps[i].name, info->si_status);
+                if (debug) {
+                    fprintf(stderr, "%s exit %#x (critical)\n", apps[i].name, info->si_status);
+                }
                 exit(0);
             }
             cleanup(&apps[i]);
-            fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
+            if (debug) {
+                fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
+            }
             return ;
         }
     }
-    fprintf(stderr, "child %d exit %#x?\n", pid, info->si_status);
+    if (debug) {
+        fprintf(stderr, "child %d exit %#x?\n", pid, info->si_status);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -389,7 +399,9 @@ int main(int argc, char *argv[]) {
                 int fd = apps[i].rx;
                 if (fd != -1 && FD_ISSET(fd, &set)) {
                     if (handle_request(&apps[i]) < 0) {
-                        fprintf(stderr, "failed to handle request from app #%d\n", apps[i].id);
+                        if (debug) {
+                            fprintf(stderr, "failed to handle request from app #%d\n", apps[i].id);
+                        }
                         kill(apps[i].pid, 9);
                         cleanup(&apps[i]);
                     }
