@@ -12,6 +12,8 @@ def download(app):
 download('perm.uapp')
 download('perm.papp')
 download('perm.sapp')
+r.sendline('run perm.uapp')
+r.sendline('run perm.papp')
 r.sendline('run perm.sapp')
 
 r.interactive()

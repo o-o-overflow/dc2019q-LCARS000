@@ -23,8 +23,8 @@ int app_main() {
     DEBUG("crypto service = %d\n", crypto_service);
     DEBUG("exec platform apps = %d\n", Xexec("echo.sys", CTX_UNTRUSTED_APP));
     DEBUG("open system file = %d\n", Xopen("root.key"));
-    DEBUG("open platform file = %d\n", Xopen("untrusted.app"));
-    DEBUG("open global file = %d\n", Xopen("hello.app"));
+    DEBUG("open platform file = %d\n", Xopen("perm.uapp"));
+    DEBUG("open global file = %d\n", Xopen("svc.uapp"));
     DEBUG("open untrusted file = %d\n", Xopen("not exists"));
     return 0;
 }
