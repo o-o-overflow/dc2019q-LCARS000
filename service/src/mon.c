@@ -14,6 +14,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 static int debug = 0; // hacker friendly
 
@@ -329,6 +330,7 @@ done:
 
 static void handler(int signo, siginfo_t *info, void *context) {
     int pid = info->si_pid;
+    waitpid(pid, NULL, 0);
     for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].pid == pid) {
             if (apps[i].critical) {
