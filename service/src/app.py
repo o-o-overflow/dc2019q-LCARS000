@@ -5,7 +5,6 @@ from Crypto.PublicKey import RSA
 KEYS = [
         open('root.key').read()[:0x20],
         'O' * 32,
-        'A' * 32,
         ]
 
 CERTS = [
@@ -39,11 +38,12 @@ class Page(object):
             prot = self.prot
         else:
             iv = URANDOM.read(16)
-            K = KEYS[self.key]
             if self.key == 2:
+                K = URANDOM.read(32)
                 crypt_info = K + iv
             else:
                 # do not leak the key
+                K = KEYS[self.key]
                 crypt_info = URANDOM.read(32) + iv
             assert len(crypt_info) == 0x30
             while len(self.raw) % 0x10:
