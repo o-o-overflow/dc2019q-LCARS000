@@ -317,24 +317,19 @@ static void handler(int signo, siginfo_t *info, void *context) {
     for (int i = 0; i < MAX_APP_COUNT; i++) {
         if (apps[i].pid == pid) {
             if (apps[i].critical) {
-                if (debug) {
-                    fprintf(stderr, "%s exit %#x (critical)\n", apps[i].name, info->si_status);
-                }
+                fprintf(stderr, "%s exit %#x (critical)\n", apps[i].name, info->si_status);
                 exit(0);
             }
             cleanup(&apps[i]);
-            if (debug) {
-                fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
-            }
+            fprintf(stderr, "%s exit %#x\n", apps[i].name, info->si_status);
             return ;
         }
     }
-    if (debug) {
-        fprintf(stderr, "child %d exit %#x?\n", pid, info->si_status);
-    }
+    fprintf(stderr, "child %d exit %#x?\n", pid, info->si_status);
 }
 
 int main(int argc, char *argv[]) {
+    fprintf(stderr, "booting...\n");
 
     void *param = mmap((void *)PARAM_RO, PARAM_SIZE * MAX_APP_COUNT, PROT_READ | PROT_WRITE,
             MAP_ANON | MAP_SHARED | MAP_FIXED, -1, 0);
@@ -354,6 +349,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
+            fprintf(stderr, "loaded %s\n", argv[i]);
             if (strstr(argv[i], ".sys")) {
                 append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_EXEC);
             } else if (strstr(argv[i], ".key")) {
@@ -367,6 +363,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    fprintf(stderr, "init\n");
     launch(CTX_KERNEL, init);
 
     while (1) {
@@ -399,9 +396,7 @@ int main(int argc, char *argv[]) {
                 int fd = apps[i].rx;
                 if (fd != -1 && FD_ISSET(fd, &set)) {
                     if (handle_request(&apps[i]) < 0) {
-                        if (debug) {
-                            fprintf(stderr, "failed to handle request from app #%d\n", apps[i].id);
-                        }
+                        fprintf(stderr, "failed to handle request from app #%d\n", apps[i].id);
                         kill(apps[i].pid, 9);
                         cleanup(&apps[i]);
                     }
