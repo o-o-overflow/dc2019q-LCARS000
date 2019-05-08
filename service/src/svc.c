@@ -108,6 +108,7 @@ int app_main() {
     char zero[0x40] = {0};
     char A[0x10] = {0};
     memset(&A, 'A', sizeof(A));
+    test_echo();
     test_hash(CRYPTO_HASH_MD5, &zero, 0x10);
     test_hash(CRYPTO_HASH_SHA, &zero, 0x10);
     test_hash(CRYPTO_HASH_SHA256, &zero, 0x10);

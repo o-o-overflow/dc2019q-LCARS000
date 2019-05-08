@@ -28,5 +28,11 @@ int app_main() {
     DEBUG("open untrusted file = %d\n", Xopen("not exists"));
     DEBUG("open flag1.papp = %d\n", Xopen("flag1.papp"));
     DEBUG("open flag2.txt = %d\n", Xopen("flag2.txt"));
+    Xecho("test sys_close\n"); // sys_close is forbidden in untrusted
+    _close(123);
+    Xecho("test sys_mprotect\n"); // sys_mprotect is forbidden in platform
+    _mprotect(NULL, 0, 0);
+    Xecho("runas untrusted\n"); // only system/kernel are allowed to reload seccomp policy
+    Xrunas(CTX_UNTRUSTED_APP);
     return 0;
 }

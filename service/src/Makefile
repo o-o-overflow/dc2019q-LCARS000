@@ -18,28 +18,29 @@ all: $(FLAGS) $(CERTS) mon $(SERVICES) $(APPLETS)
 	svc.app perm.app flag1.app
 
 clean:
-	rm -rf *.o *.elf *.sys *.app $(SERVICES) $(APPLETS)
+	rm -rf *.o *.elf *.sys *.app *.bpf $(SERVICES) $(APPLETS)
 
 clean-all: clean
 	rm $(KEYS) $(CERTS)
 
-mon: mon.o msg.o fs.o
+mon: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
+	# $(PREFIX)strip $@
 
-%.sys.elf: app.o %.o
+%.sys.elf: app.o %.o scmp.o
 	$(PREFIX)ld -T sys.x -o $@ $^ $(LIBC)
 
 %.sys: %.sys.elf
 	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
 
-%.app.elf: app.o %.o
+%.app.elf: app.o %.o scmp.o
 	$(PREFIX)ld -T app.x -o $@ $^ $(LIBC)
 
 %.app: %.app.elf
 	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
 
 crypto.sys.elf: app.o crypto.o gnu-c.o certs.h
-	$(PREFIX)ld -T sys.x -o $@ app.o crypto.o $(LIBWOLFSSL) gnu-c.o $(LIBC) \
+	$(PREFIX)ld -T sys.x -o $@ app.o crypto.o $(LIBWOLFSSL) gnu-c.o scmp.o $(LIBC) \
 		/usr/lib/gcc/x86_64-linux-gnu/7/libgcc.a \
 		--ignore-unresolved-symbol __strcat_chk \
 		--ignore-unresolved-symbol __snprintf_chk \
@@ -49,6 +50,9 @@ crypto.sys.elf: app.o crypto.o gnu-c.o certs.h
 		--error-unresolved-symbols
 
 %.o: %.c
+	$(PREFIX)gcc -c $(CFLAGS) -o $@ $<
+
+scmp.o: scmp.c policy.h
 	$(PREFIX)gcc -c $(CFLAGS) -o $@ $<
 
 %.sapp: %.app app.py
@@ -82,4 +86,11 @@ certs-test.h: app.py
 
 flag%.h: flag%.txt
 	xxd -i $< > $@
+	sed -i 's/unsigned/const unsigned/' $@
+
+policy.h: policy.py
+	python policy.py
+	xxd -i untrusted.bpf > $@
+	xxd -i platform.bpf >> $@
+	xxd -i system.bpf >> $@
 	sed -i 's/unsigned/const unsigned/' $@

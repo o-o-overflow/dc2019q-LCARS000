@@ -1,6 +1,8 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#include <stdint.h>
+
 #define APP_BLOCK_SIZE 0x4000ULL
 #define APP_TEXT_BASE 0x10000000ULL
 #define APP_DATA_BASE 0x20000000ULL

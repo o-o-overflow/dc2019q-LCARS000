@@ -2,6 +2,7 @@
 #include "mon.h"
 #include "msg.h"
 #include "fs.h"
+#include "scmp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,7 +62,10 @@ static int launch(enum app_ctx ctx, int fd) {
         for (int i = 2; i < 1024; i++) {
             close(i);
         }
-        // TODO setup seccomp
+        int ret = load_policy(ctx);
+        if (ret < 0) {
+            exit(ret);
+        }
         asm volatile (
                 "movq %0, %%rsp\n"
                 "pushq %1\n"

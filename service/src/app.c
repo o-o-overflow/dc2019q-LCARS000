@@ -1,4 +1,5 @@
 #include "app.h"
+#include "scmp.h"
 #include <string.h>
 #include <sys/syscall.h>
 #include <sys/socket.h>
@@ -231,5 +232,6 @@ int Xexec(const char *str, int ctx) {
 }
 
 int Xrunas(int ctx) {
+    load_policy(ctx);
     return request(REQ_RUNAS, ctx, 0, 0, 0);
 }
