@@ -13,6 +13,8 @@ CERTS = [
         RSA.importKey(open('platform.priv').read()),
         ]
 
+URANDOM = open('/dev/urandom')
+
 def pad(m):
     assert len(m) <= 252
     return '\x00\x01' + ('\x00' + m).rjust(254, '\xff')
@@ -36,16 +38,16 @@ class Page(object):
             data = self.raw
             prot = self.prot
         else:
-            iv = open('/dev/urandom').read(16)
+            iv = URANDOM.read(16)
             K = KEYS[self.key]
             if self.key == 2:
                 crypt_info = K + iv
             else:
                 # do not leak the key
-                crypt_info = '\x00' * 32 + iv
+                crypt_info = URANDOM.read(32) + iv
             assert len(crypt_info) == 0x30
             while len(self.raw) % 0x10:
-                self.raw += '\x00'
+                self.raw += URANDOM.read(1)
             prot = self.prot | 8
             raw = AES.new(key=K, mode=AES.MODE_CBC, IV=iv).encrypt(self.raw)
             assert len(raw) == len(self.raw)
