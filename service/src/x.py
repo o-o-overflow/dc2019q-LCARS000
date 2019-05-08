@@ -13,7 +13,10 @@ def download(rfile, lfile):
 # download('hello.app', 'hello.app')
 # r.sendline('run hello.app')
 download('untrusted.app', 'untrusted.app')
-r.sendline('run untrusted.app')
-
+download('platform.app', 'platform.app')
+download('system.app', 'system.app')
+# r.sendline('run untrusted.app')
+# r.sendline('run platform.app')
+r.sendline('run system.app')
 
 r.interactive()

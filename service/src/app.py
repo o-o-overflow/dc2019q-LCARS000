@@ -1,9 +1,9 @@
-import sys, struct
+import sys, struct, hashlib
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 
 KEYS = [
-        '\x00' * 32,
+        open('root.key').read()[:0x20],
         'O' * 32,
         'A' * 32,
         ]
@@ -27,7 +27,6 @@ class Page(object):
         self.raw = raw
         self.prot = prot
         self.key = key
-        self.cert = key
 
     def encrypt(self, key):
         pass
@@ -39,15 +38,27 @@ class Page(object):
         else:
             iv = open('/dev/urandom').read(16)
             K = KEYS[self.key]
-            hdr = K + iv
-            assert len(hdr) == 0x30
+            if self.key == 2:
+                crypt_info = K + iv
+            else:
+                # do not leak the key
+                crypt_info = '\x00' * 32 + iv
+            assert len(crypt_info) == 0x30
             while len(self.raw) % 0x10:
                 self.raw += '\x00'
-            data = hdr + AES.new(key=K, mode=AES.MODE_CBC,
-                    IV=iv).encrypt(self.raw)
             prot = self.prot | 8
+            raw = AES.new(key=K, mode=AES.MODE_CBC, IV=iv).encrypt(self.raw)
+            assert len(raw) == len(self.raw)
+            if self.key < 2:
+                prot = prot | 0x10
+                h = hashlib.sha1(raw).digest()
+                sig = sign(self.key, h)
+                assert len(sig) == 0x100
+            else:
+                sig = ''
+            data = sig + crypt_info + raw
         return struct.pack('<IIBBBB', self.base, len(self.raw), prot, 1,
-                self.key, self.cert) + data
+                self.key, self.key) + data
 
 class App(object):
     def __init__(self, name='app'):

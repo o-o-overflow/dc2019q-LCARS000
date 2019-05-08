@@ -9,6 +9,53 @@
 
 static struct app_region regions[MAX_PAGE_COUNT];
 
+static int shasum(const char *in, void *out, size_t size) {
+    int crypto_service = Xlookup("crypto");
+    struct crypto_request req = {0};
+    msg_t m = {0};
+    req.type = CRYPTO_HASH_SHA;
+    req.hash_data = shm_alloc(size);
+    req.hash_data_size = size;
+    memcpy(PARAM_AT(req.hash_data), in, size);
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
+    Xwait(crypto_service, -1, &m);
+    if (m.type == 0) {
+        memcpy(out, PARAM_FOR(m.from) + m.start, m.size);
+#ifdef DEBUG
+    } else {
+        Xecho(PARAM_FOR(m.from) + m.start);
+#endif
+    }
+    return m.type;
+}
+
+static int rsa_decrypt(int cert, const void *in, void *out) {
+    int crypto_service = Xlookup("crypto");
+    struct crypto_request req = {0};
+    msg_t m = {0};
+    req.type = CRYPTO_DECRYPT_RSA;
+    req.sig_cert_id = cert;
+    req.sig_data = shm_alloc(0x100);
+    req.sig_data_size = 0x100;
+    memcpy(PARAM_AT(req.sig_data), in, 0x100);
+    int ret = Xpost(crypto_service, 'SECD', &req, sizeof(req));
+    if (ret < 0) {
+        return ret;
+    }
+    Xwait(crypto_service, -1, &m);
+    if (m.type == 0) {
+        memcpy(out, PARAM_FOR(m.from) + m.start, m.size);
+#ifdef DEBUG
+    } else {
+        Xecho(PARAM_FOR(m.from) + m.start);
+#endif
+    }
+    return m.type;
+}
+
 static int aes_decrypt(struct app_page *pg, struct app_page_crypto *ci, const char *in, char *out, size_t size) {
     int crypto_service = Xlookup("crypto");
     struct crypto_request req = {0};
@@ -68,13 +115,30 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
     for (int i = 0; i < header.pages; i++) {
         struct app_page pg = {0};
         struct app_page_crypto c = {0};
+        struct app_page_sig sig = {0};
         ret = read_all(fd, &pg, sizeof(pg));
         if (ret < 0) {
             *err = "page";
             goto fail;
         }
         if (pg.flags & PAGE_SIGNED) {
-            // TODO check signature
+            if ((pg.s_cert != CRYPTO_CERT_SYSTEM && pg.s_cert != CRYPTO_CERT_PLATFORM)) {
+                ret = -EINVAL;
+                *err = "sig param";
+                goto fail;
+            }
+            if (!(pg.flags & PAGE_ENCRYPTED) || pg.s_cert != pg.c_key) {
+                // signed pages must be encrypted
+                // cert should matches decryption key
+                ret = -EINVAL;
+                *err = "mismatch";
+                goto fail;
+            }
+            ret = read_all(fd, &sig, sizeof(sig));
+            if (ret < 0) {
+                *err = "sig info";
+                goto fail;
+            }
         }
         if (pg.flags & PAGE_ENCRYPTED) {
             if ((pg.c_mode != CRYPTO_MODE_ECB && pg.c_mode != CRYPTO_MODE_CBC)
@@ -128,6 +192,24 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
             *err = "truncated";
             goto fail;
         }
+        if (pg.flags & PAGE_SIGNED) {
+            uint8_t hash1[20], hash2[20];
+            ret = shasum(tmpbuf, &hash1, pg.size);
+            if (ret < 0) {
+                *err = "hash";
+                goto fail;
+            }
+            ret = rsa_decrypt(pg.s_cert, sig.sig, &hash2);
+            if (ret < 0) {
+                *err = "decrypt";
+                goto fail;
+            }
+            if (memcmp(hash1, hash2, 20)) {
+                ret = -EINVAL;
+                *err = "verify";
+                goto fail;
+            }
+        }
         if (pg.flags & PAGE_ENCRYPTED) {
             ret = aes_decrypt(&pg, &c, tmpbuf, page, pg.size);
             if (ret < 0) {
@@ -146,7 +228,19 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
         }
         if (pg.flags & PAGE_EXEC) {
             if (!(pg.flags & PAGE_SIGNED)) {
+                // unsigned pages are untrusted
                 info->ctx = CTX_UNTRUSTED_APP;
+            } else {
+                // drop privilege level if necessary
+                if (pg.s_cert == CRYPTO_CERT_SYSTEM) {
+                    if (info->ctx < CTX_SYSTEM_APP) {
+                        info->ctx = CTX_SYSTEM_APP;
+                    }
+                } else if (pg.s_cert == CRYPTO_CERT_PLATFORM) {
+                    if (info->ctx < CTX_PLATFORM_APP) {
+                        info->ctx = CTX_PLATFORM_APP;
+                    }
+                }
             }
             if (info->entry == 0) {
                 info->entry = pg.start;

@@ -5,7 +5,7 @@ CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=hello.sys echo.sys init.sys loader.sys crypto.sys
-APPLETS=hello.app untrusted.app
+APPLETS=hello.app untrusted.app system.app platform.app
 KEYS=system.pub system.priv platform.pub platform.priv
 
 all: certs.h mon $(SERVICES) $(APPLETS)
@@ -41,10 +41,18 @@ crypto.elf: app.o crypto.o gnu-c.o certs.h
 %.sys: %.elf
 	$(PREFIX)objcopy $< -O binary -j .text -j .data $@
 
-%.app: app.o %.o
-	$(PREFIX)ld -T uapp.x -o $*.raw $^ $(LIBC)
-	$(PREFIX)objcopy $*.raw -O binary -j .text -j .data $*.raw
-	python app.py $* $*.raw 2 > $@
+%.raw: app.o %.o
+	$(PREFIX)ld -T uapp.x -o $@.elf $^ $(LIBC)
+	$(PREFIX)objcopy $@.elf -O binary -j .text -j .data $@
+
+%.app: %.raw app.py
+	python app.py $* $< 2 > $@
+
+system.app: untrusted.raw app.py
+	python app.py $@ $< 0 > $@
+
+platform.app: untrusted.raw app.py
+	python app.py $@ $< 1 > $@
 
 %.priv:
 	openssl genrsa -out $@ 2048
@@ -52,7 +60,7 @@ crypto.elf: app.o crypto.o gnu-c.o certs.h
 %.pub:	%.priv
 	openssl rsa -in $< -out $@ -outform der -pubout
 
-certs.h: system.pub platform.pub
+certs.h: system.pub platform.pub app.py
 	xxd -i system.pub > $@
 	xxd -i platform.pub >> $@
 	python app.py 0 system_app > test_system

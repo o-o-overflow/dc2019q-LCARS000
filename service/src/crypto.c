@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#define XMALLOC_USER
 #define WC_NO_HARDEN
+#define WC_RSA_BLINDING
 #define WOLFSSL_AES_DIRECT
 #include <wolfssl/wolfcrypt/hash.h>
 #include <wolfssl/wolfcrypt/aes.h>
@@ -22,7 +22,7 @@ int app_main() {
     // ROOT KEY: load from filesystem
     int fd = Xopen("root.key");
     if (fd >= 0) {
-        read_all(fd, &keys[0], sizeof(AES_KEY));
+        int ret = read_all(fd, &keys[0], sizeof(AES_KEY));
         _close(fd);
     }
     // PROVISION KEY: hardcoded
