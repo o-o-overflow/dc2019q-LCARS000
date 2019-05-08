@@ -1,4 +1,4 @@
-.PHONEY: all clean
+.PHONEY: all clean clean-all release
 
 CFLAGS=-fPIC -Os -g -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
@@ -23,9 +23,13 @@ clean:
 clean-all: clean
 	rm $(KEYS) $(CERTS)
 
+release: all
+	cp mon echo.sys crypto.sys loader.sys init.sys ../public
+	cp exp1.uapp flag1.papp app.py ../../interaction
+
 mon: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
-	# $(PREFIX)strip $@
+	$(PREFIX)strip $@
 
 %.sys.elf: app.o %.o scmp.o
 	$(PREFIX)ld -T sys.x -o $@ $^ $(LIBC)
