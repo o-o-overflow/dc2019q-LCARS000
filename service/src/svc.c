@@ -15,6 +15,8 @@ static void hexdump(const void *raw, uint32_t size) {
     for (int i = 0; i < size; i++) {
         sprintf(&buf[i * 2], "%02x", ((uint8_t *)raw)[i]);
     }
+    buf[size * 2] = '\n';
+    buf[size * 2 + 1] = '\0';
     Xecho(buf);
 }
 
@@ -113,11 +115,11 @@ int app_main() {
     test_aes(CRYPTO_MODE_ECB, 0, CRYPTO_KEY_ROOT, zero, 0x10, NULL);
     test_aes(CRYPTO_MODE_ECB, 0, CRYPTO_KEY_PROVISION, zero, 0x10, NULL);
     test_aes(CRYPTO_MODE_ECB, 0, CRYPTO_KEY_SESSION, zero, 0x10, NULL);
-    test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x10, NULL);
+    test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x10, NULL); // iv
     test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x40, zero);
     test_aes(CRYPTO_MODE_CBC, 0, CRYPTO_KEY_PROVISION, zero, 0x40, A);
     test_aes(CRYPTO_MODE_CBC, 1, CRYPTO_KEY_PROVISION, zero, 0x40, A);
-    test_rsa(CRYPTO_CERT_SYSTEM, test_system, test_system_len);
-    test_rsa(CRYPTO_CERT_PLATFORM, test_platform, test_platform_len);
+    test_rsa(CRYPTO_CERT_SYSTEM, test_system, test_system_len); // system_app
+    test_rsa(CRYPTO_CERT_PLATFORM, test_platform, test_platform_len); // platform_app
     return 0;
 }
