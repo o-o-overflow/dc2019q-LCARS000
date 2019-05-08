@@ -19,6 +19,7 @@ copy public/echo.sys /echo.sys
 #    && apt-get -y autoremove
 
 # Or, include the flag file in the repository
+copy src/root.key /root.key
 copy src/flag1.papp /flag1.papp
 copy src/flag2.txt /flag2.txt
 copy src/flag3.txt /flag3.txt
