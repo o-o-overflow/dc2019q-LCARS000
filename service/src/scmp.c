@@ -1,7 +1,7 @@
 #include "scmp.h"
 #include "policy.h"
 #include <errno.h>
-#include <seccomp.h>
+#include <linux/seccomp.h>
 #include <sys/prctl.h>
 
 int load_policy(enum app_ctx ctx) {
@@ -27,6 +27,7 @@ int load_policy(enum app_ctx ctx) {
         default:
             return -EINVAL;
     }
+    prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
     if (filter.size != 0) {
         return prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &filter);
     } else {
