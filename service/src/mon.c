@@ -369,6 +369,8 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "loaded %s\n", argv[i]);
             if (!strcmp(argv[i], "flag2.txt")) {
                 append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_RDWR);
+            } else if (!strcmp(argv[i], "flag3.txt")) {
+                append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_RDWR);
             } else if (strstr(argv[i], ".sys")) {
                 append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_EXEC);
             } else if (strstr(argv[i], ".key")) {
@@ -379,6 +381,8 @@ int main(int argc, char *argv[]) {
             if (init == -1) {
                 init = fd;
             }
+        } else {
+            fprintf(stderr, "not loaded %s\n", argv[i]);
         }
     }
 

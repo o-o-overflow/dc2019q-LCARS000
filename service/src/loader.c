@@ -7,10 +7,10 @@
 
 #define AES_BLOCK_SIZE 0x10
 
+static int crypto_service = -1;
 static struct app_region regions[MAX_PAGE_COUNT];
 
 static int shasum(const char *in, void *out, size_t size) {
-    int crypto_service = Xlookup("crypto");
     struct crypto_request req = {0};
     msg_t m = {0};
     req.type = CRYPTO_HASH_SHA;
@@ -33,7 +33,6 @@ static int shasum(const char *in, void *out, size_t size) {
 }
 
 static int rsa_decrypt(int cert, const void *in, void *out) {
-    int crypto_service = Xlookup("crypto");
     struct crypto_request req = {0};
     msg_t m = {0};
     req.type = CRYPTO_DECRYPT_RSA;
@@ -57,7 +56,6 @@ static int rsa_decrypt(int cert, const void *in, void *out) {
 }
 
 static int aes_decrypt(struct app_page *pg, struct app_page_crypto *ci, const char *in, char *out, size_t size) {
-    int crypto_service = Xlookup("crypto");
     struct crypto_request req = {0};
     msg_t m = {0};
     req.type = CRYPTO_DECRYPT_AES;
@@ -193,7 +191,7 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
             goto fail;
         }
         if (pg.flags & PAGE_SIGNED) {
-            uint8_t hash1[20], hash2[20];
+            uint8_t hash1[20] = {0}, hash2[20] = {0};
             ret = shasum(tmpbuf, &hash1, pg.size);
             if (ret < 0) {
                 *err = "hash";
@@ -261,7 +259,7 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
     *err = "ok";
     return 0;
 fail:
-    for (int i = 0; i < region_cnt; i++) {
+    for (int i = region_cnt; i >= 0; i--) { // OOB
         _munmap((void *)regions[i].start, regions[i].size);
     }
     return ret;
@@ -272,6 +270,7 @@ int app_main() {
     char name[0x20];
     const char *err = "";
     Xcheckin("loader", -1);
+    crypto_service = Xlookup("crypto");
     while (Xwait(-1, 'load', &msg) == 0) {
         struct app_info info = {0};
         strncpy(name, PARAM_FOR(msg.from) + msg.start, sizeof(name));
