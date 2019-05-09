@@ -19,7 +19,7 @@ def pad(m):
     return '\x00\x01' + ('\x00' + m).rjust(254, '\xff')
 
 def sign(c, m):
-    return CERTS[int(c)].decrypt(pad(m))
+    return CERTS[int(c)].decrypt(pad(m)).rjust(256, '\x00')
 
 class Page(object):
     def __init__(self, base, prot, raw='', key=0xff, cert=None):
