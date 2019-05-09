@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
             } else if (!strcmp(argv[i], "flag3.txt")) {
                 append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_RDWR);
             } else if (strstr(argv[i], ".sys")) {
-                append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_EXEC);
+                append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_EXEC);
             } else if (strstr(argv[i], ".key")) {
                 append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_RDWR);
             } else {
