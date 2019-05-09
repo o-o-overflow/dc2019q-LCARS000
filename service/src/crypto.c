@@ -44,7 +44,7 @@ int app_main() {
     dummy = 0;
     wc_RsaPublicKeyDecode(platform_pub, &dummy, &certs[1], platform_pub_len);
 
-    Xrunas(CTX_UNTRUSTED_APP);
+    Xrunas(CTX_PLATFORM_APP);
 
     msg_t msg;
     struct crypto_request req;

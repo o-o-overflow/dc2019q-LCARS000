@@ -180,7 +180,10 @@ static int handle_request(app_t *app) {
         case REQ_CHECKIN:
             if (req.b == sizeof(app->name) && access_ok(req.a, sizeof(app->name))) {
                 strncpy(app->name, PARAM_FOR(app->id) + req.a, sizeof(app->name));
-                app->role = req.c;
+                if (app->ctx != CTX_UNTRUSTED_APP) {
+                    // untrusted app can not change role
+                    app->role = req.c;
+                }
                 ret = 0;
             } else {
                 ret = -EINVAL;
@@ -201,7 +204,10 @@ static int handle_request(app_t *app) {
             }
             break;
         case REQ_WAIT:
-            if (!access_ok(req.c, req.d)) {
+            if (app->role == CTX_UNTRUSTED_APP) {
+                ret = -EPERM;
+                break;
+            } else if (!access_ok(req.c, req.d)) {
                 ret = -EINVAL;
                 break;
             }
@@ -209,7 +215,10 @@ static int handle_request(app_t *app) {
             accept_msg(app);
             goto done;
         case REQ_POST:
-            if (!access_ok(req.c, req.d)) {
+            if (app->role == CTX_UNTRUSTED_APP) {
+                ret = -EPERM;
+                break;
+            } else if (!access_ok(req.c, req.d)) {
                 ret = -EINVAL;
                 break;
             }
@@ -288,6 +297,10 @@ static int handle_request(app_t *app) {
                 ret = -EPERM;
             } else {
                 app->ctx = req.a;
+                if (app->ctx == CTX_UNTRUSTED_APP) {
+                    // lock down role
+                    app->role = CTX_UNTRUSTED_APP;
+                }
             }
             break;
         default:

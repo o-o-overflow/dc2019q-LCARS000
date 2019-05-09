@@ -5,7 +5,7 @@
 int app_main() {
     Xcheckin("echo", -1);
     int fd = Xopen("/dev/stdout");
-    Xrunas(CTX_UNTRUSTED_APP);
+    Xrunas(CTX_PLATFORM_APP);
     msg_t msg;
     char buf[0x100];
     while (Xwait(-1, -1, &msg) == 0) {
