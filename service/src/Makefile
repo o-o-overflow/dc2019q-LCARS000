@@ -5,7 +5,7 @@ CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=echo.sys init.sys loader.sys crypto.sys
-APPLETS=svc.papp perm.uapp perm.papp perm.sapp flag1.papp exp1.uapp exp3.papp
+APPLETS=svc.papp perm.uapp perm.papp perm.sapp flag1.papp exp1.uapp exp3.papp exp4.app
 KEYS=system.pub system.priv platform.pub platform.priv
 CERTS=certs.h certs-test.h
 FLAGS=flag1.h
@@ -25,7 +25,7 @@ clean-all: clean
 
 release: all
 	cp mon echo.sys crypto.sys loader.sys init.sys ../public
-	cp exp1.uapp flag1.papp exp3.papp ../../interaction
+	cp exp1.uapp flag1.papp exp3.papp exp4.app ../../interaction
 
 mon: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000

