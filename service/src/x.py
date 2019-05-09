@@ -1,7 +1,8 @@
 from pwn import *
 
 args = ['./mon', 'init.sys', 'loader.sys', 'echo.sys',
-        'crypto.sys', 'svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt']
+        'crypto.sys', 'svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt',
+        'flag3.txt']
 # args = ['strace', '-f'] + args
 r = process(args)
 

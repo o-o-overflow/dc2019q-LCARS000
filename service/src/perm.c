@@ -28,6 +28,7 @@ int app_main() {
     DEBUG("open untrusted file = %d\n", Xopen("not exists"));
     DEBUG("open flag1.papp = %d\n", Xopen("flag1.papp"));
     DEBUG("open flag2.txt = %d\n", Xopen("flag2.txt"));
+    DEBUG("open flag3.txt = %d\n", Xopen("flag3.txt"));
     Xecho("test sys_close\n"); // sys_close is forbidden in untrusted
     _close(123);
     Xecho("test sys_mprotect\n"); // sys_mprotect is forbidden in platform
