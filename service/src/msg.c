@@ -60,7 +60,7 @@ int accept_msg(app_t *app) {
     if (len > 0x10) {
         len = 0x10;
     }
-    memcpy(PARAM_FOR(app->id) + app->cur_req.c, msg, len);
+    memcpy(PARAM_FOR(app->id) + app->cur_req.c, &msg->from, len);
     free(msg);
     app->cur_req.no = -1;
     app->state = STATE_IDLE;

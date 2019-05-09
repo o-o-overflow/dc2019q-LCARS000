@@ -186,7 +186,7 @@ int Xwait(int from, int type, msg_t *msg) {
     uint32_t a = shm_alloc(0x10);
     int ret = request(REQ_WAIT, from, type, a, 0x10);
     if (ret == 0 && msg != NULL) {
-        memcpy(msg, PARAM_AT(a), 0x10);
+        memcpy(&msg->from, PARAM_AT(a), 0x10);
     }
     return ret;
 }

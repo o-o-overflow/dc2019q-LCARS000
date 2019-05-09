@@ -66,11 +66,11 @@ struct app_request {
 };
 
 typedef struct msg {
+    struct msg *next;
     int32_t from;
     int32_t type;
     uint32_t start;
     uint32_t size;
-    struct msg *next;
 } msg_t;
 
 #endif
