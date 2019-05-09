@@ -22,12 +22,17 @@ def sign(c, m):
     return CERTS[int(c)].decrypt(pad(m))
 
 class Page(object):
-    def __init__(self, base, prot, raw='', key=0xff):
+    def __init__(self, base, prot, raw='', key=0xff, cert=None):
         assert len(raw) <= 0x1000
         self.base = base
         self.raw = raw
         self.prot = prot
         self.key = key
+        if cert is None:
+            self.cert = key
+        else:
+            # unsigned
+            self.cert = 0xff
 
     def encrypt(self, key):
         pass
@@ -51,25 +56,25 @@ class Page(object):
             prot = self.prot | 8
             raw = AES.new(key=K, mode=AES.MODE_CBC, IV=iv).encrypt(self.raw)
             assert len(raw) == len(self.raw)
-            if self.key < 2:
+            if self.cert < 2:
                 prot = prot | 0x10
                 h = hashlib.sha1(raw).digest()
-                sig = sign(self.key, h)
+                sig = sign(self.cert, h)
                 assert len(sig) == 0x100
             else:
                 sig = ''
             data = sig + crypt_info + raw
         return struct.pack('<IIBBBB', self.base, len(self.raw), prot, 1,
-                self.key, self.key) + data
+                self.key, self.cert) + data
 
 class App(object):
     def __init__(self, name='app'):
         self.name = name.ljust(0x20, '\x00')[:0x20]
         self.pages = []
 
-    def add_segment(self, base, prot, raw, key=0xff):
+    def add_segment(self, base, prot, raw, key=0xff, cert=None):
         for i in xrange(0, len(raw), 0x1000):
-            self.pages.append(Page(base + i, prot, raw[i:i + 0x1000], key))
+            self.pages.append(Page(base + i, prot, raw[i:i + 0x1000], key, cert))
 
     def __str__(self):
         return ''.join([
