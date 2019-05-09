@@ -1,6 +1,6 @@
 # Info for the schoreboard
 service_name: "life"
-description: "This is a life."
+description: "life"
 tags:
   - misc # it's mixed
 
@@ -32,6 +32,7 @@ public_files:
   - service/public/init.sys
   - service/public/loader.sys
   - service/public/crypto.sys
+  - service/public/echo.sys
 
 # Test scripts are heavily encouraged.
 # All scripts should exit 0 if nothing went wrong.

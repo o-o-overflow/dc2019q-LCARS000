@@ -17,4 +17,3 @@ COPY exploit2.py /exploit2.py
 COPY flag1.papp /flag1.papp
 COPY exploit3.py /exploit3.py
 COPY exp3.papp /exp3.papp
-COPY exp4.app /exp4.app
