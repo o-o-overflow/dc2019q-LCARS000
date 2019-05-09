@@ -87,8 +87,7 @@ static int launch(enum app_ctx ctx, int fd) {
         app->role = ctx;
         app->critical = ctx == CTX_KERNEL;
         app->state = STATE_IDLE;
-        // FIXME intended bug: msg uaf to bypass access control
-        // app->msg = NULL;
+        app->msg = NULL;
         snprintf(app->name, sizeof(app->name), "app #%d", app->id);
     }
     return app_id;
@@ -100,6 +99,9 @@ static void cleanup(app_t *app) {
     app->tx = -1;
     app->rx = -1;
     app->state = STATE_DEAD;
+    app->msg = NULL;
+    // FIXME messages are just leaked, because free() in signal handler
+    // could cause terrible race condition.
 }
 
 static int read_all(int fd, void *buf, size_t total) {
