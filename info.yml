@@ -1,16 +1,15 @@
 # Info for the schoreboard
-service_name: "LCARS000"
-description: "Library Computer Access/Retrieval System"
+service_name: "LCARS333"
+description: "Library Computer Access/Retrieval System, (files are encrypted with flag22.txt of LCARS022, flag is in flag333.txt)"
 tags:
-  - reverse
-  - shellcode
+  - pwn
 
 violates_flag_format: false # if this is not "true", the flag is verfied against the flag format
 
 # At some point we may start blocking all egress connections. Set this to True if your service needs them. DO NOT RELY ON THIS FOR BLOCKING THOUGH.
 allow_egress: False
 
-flag: "OOO{c1c54538b346dd9c393611af8c06de45}" # this is the flag of the service
+flag: "OOO{e1c64e8783f32e782e71902e734014e8}" # this is the flag of the service
 
 # Type can be normal or king_of_the_hill
 type: normal
@@ -23,7 +22,7 @@ authors:
   - slipper
 
 game_network_info:
-  host: lcars000.oooverflow.io
+  host: lcars333.quals2019.oooverflow.io
   port: 5000
   
   
@@ -34,11 +33,7 @@ game_network_info:
 # These are the files that will be "public" to the teams via the scoreboard.
 # The paths are relative to the repository!
 public_files:
-  - service/public/LCARS
-  - service/public/init.sys
-  - service/public/loader.sys
-  - service/public/crypto.sys
-  - service/public/echo.sys
+  - service/public/LCARS.zip
 
 # Test scripts are heavily encouraged.
 # All scripts should exit 0 if nothing went wrong.
@@ -46,4 +41,4 @@ public_files:
 # Exploit scripts must output the flag using "FLAG: <FLAG>" and exit with 0 if the flag was captured correctly. 
 # The paths are absolute in the `interaction` docker container.
 interactions:
-  - /exploit1.py
+  - /exploit3.py
