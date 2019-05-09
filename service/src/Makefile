@@ -28,7 +28,8 @@ release: all
 	cp exp1.uapp flag1.papp exp3.papp exp4.app ../../interaction
 
 mon: mon.o msg.o fs.o scmp.o
-	$(PREFIX)gcc -o $@ $^ -Wl,--Ttext-segment=0x100000000
+	$(PREFIX)gcc -o $@.elf $^ -Wl,--Ttext-segment=0x100000000
+	cp $@.elf $@
 	$(PREFIX)strip $@
 
 %.sys.elf: app.o %.o scmp.o
