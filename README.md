@@ -101,3 +101,32 @@ The hacker should have some signed pages from the previous stage. He could
 modify the IV used in AES-CBC decryption to change the first 16 bytes of
 signed page. By mapping controlled data page after current stack, he can
 use ROP to open/read/write `flag2.txt`.
+
+In this level, hacker gains code execution as PLATFORM\_APP.
+
+`flag1.papp` is required for this level. Hacker should have solved Level1
+before Level2.
+
+### Level3: OOB read uninitialized memory
+
+Loader records all loaded memory pages. It will unmap all pages on error.
+Uninitialized .BSS data will be accessed due to an off-by-one bug. This is
+not a very serious problem unless the hacker maps the page just after .BSS
+section.
+
+Now the hacker gains the ability to unmap arbitrary pages. Notice that it
+does not give direct code execution primitive because after unmapping the
+hacker has no way to do mapping. Unmapping .text/.stack/.data will cause
+segfault immediately.
+
+The intended solution is to unmap the `SHARED` memory and replace it with
+`PRIVATE` memory. This will not affect control flow of current program, but
+breaks the IPC mechanism. By unmapping `local` shared memory, remote process
+will not see any update of the message content. By unmapping `remote`
+shared memory, local process will see arbitrary message response. Now the
+crypto verfication is totally comproised and hacker gains code execution as
+SYSTEM\_APP.
+
+Untrusted user can not talk to the loader directly. The hacker
+should have at least PLATFORM\_APP privilege to talk to the loader to do
+unmapping and remapping. Hacker should have solved Level2 before Level3.
