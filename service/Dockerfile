@@ -25,6 +25,7 @@ copy src/flag2.txt /flag2.txt
 copy src/flag3.txt /flag3.txt
 
 copy service.conf /service.conf
+copy banner_fail /
 copy wrapper /wrapper
 
 expose 5000
