@@ -23,6 +23,7 @@ copy src/root.key /root.key
 copy src/flag1.papp /flag1.papp
 copy src/flag2.txt /flag2.txt
 copy src/flag3.txt /flag3.txt
+copy src/flag4.txt /notflag4.txt
 
 copy service.conf /service.conf
 copy banner_fail /
