@@ -28,7 +28,7 @@ authors:
 # These are the files that will be "public" to the teams via the scoreboard.
 # The paths are relative to the repository!
 public_files:
-  - service/public/mon
+  - service/public/LCARS
   - service/public/init.sys
   - service/public/loader.sys
   - service/public/crypto.sys

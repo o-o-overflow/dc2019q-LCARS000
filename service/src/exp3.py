@@ -20,7 +20,7 @@ pop_rsi_r15 = loader_base + 0x91d
 
 # assume we already have code execution (or rop) as platform_app
 
-r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
+r = process(['./LCARS', './init.sys', './loader.sys', './echo.sys',
     './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt',
     'flag3.txt'])
 

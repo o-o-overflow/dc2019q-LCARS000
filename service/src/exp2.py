@@ -44,7 +44,7 @@ exp2_papp = str(blob) + str(Page(0xf0000000, 3,
         _exit
     ])))))
 
-r = process(['./mon', './init.sys', './loader.sys', './echo.sys',
+r = process(['./LCARS', './init.sys', './loader.sys', './echo.sys',
     './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt'])
 
 def download(app, blob):

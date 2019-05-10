@@ -6,7 +6,7 @@ run echo "travis_fold:start:Dapt\033[33;1mservice Dockerfile apt\033[0m" && \
 
 run apt-get install -qq gdb strace
 
-copy public/mon /mon
+copy public/LCARS /LCARS
 copy public/init.sys /init.sys
 copy public/loader.sys /loader.sys
 copy public/crypto.sys /crypto.sys

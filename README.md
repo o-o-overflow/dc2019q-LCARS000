@@ -1,10 +1,10 @@
-# DEFCON 2019 Quals Life
+# DEFCON 2019 Quals LCARS000
 
 [![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-life.svg?token=UsYquYpUiJ6uJsajRAzb&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-life)
 
 This challenge contains 3 flags.
 
-`mon` is a micro kernel that could load and run multiple apps. 
+`LCARS` is a micro kernel that could load and run multiple apps. 
 
 ## Services
  

@@ -10,7 +10,7 @@ KEYS=system.pub system.priv platform.pub platform.priv
 CERTS=certs.h certs-test.h
 FLAGS=flag1.h
 
-all: $(FLAGS) $(CERTS) mon $(SERVICES) $(APPLETS)
+all: $(FLAGS) $(CERTS) LCARS $(SERVICES) $(APPLETS)
 
 .intermediates: $(KEYS) \
 	echo.sys.elf init.sys.elf loader.sys.elf crypto.sys.elf \
@@ -24,10 +24,10 @@ clean-all: clean
 	rm $(KEYS) $(CERTS)
 
 release: all
-	cp mon echo.sys crypto.sys loader.sys init.sys ../public
+	cp LCARS echo.sys crypto.sys loader.sys init.sys ../public
 	cp exp1.uapp flag1.papp exp3.papp exp4.app ../../interaction
 
-mon: mon.o msg.o fs.o scmp.o
+LCARS: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@.elf $^ -Wl,--Ttext-segment=0x100000000
 	cp $@.elf $@
 	$(PREFIX)strip $@

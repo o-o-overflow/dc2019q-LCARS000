@@ -1,6 +1,6 @@
 from pwn import *
 
-args = ['./mon', 'init.sys', 'loader.sys', 'echo.sys',
+args = ['./LCARS', 'init.sys', 'loader.sys', 'echo.sys',
         'crypto.sys', 'svc.papp', 'root.key', 'flag1.papp', 'flag2.txt',
         'flag3.txt']
 # args = ['strace', '-f'] + args
