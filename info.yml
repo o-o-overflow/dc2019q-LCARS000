@@ -2,7 +2,8 @@
 service_name: "LCARS000"
 description: "Library Computer Access/Retrieval System"
 tags:
-  - pwn
+  - reverse
+  - shellcode
 
 violates_flag_format: false # if this is not "true", the flag is verfied against the flag format
 
