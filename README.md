@@ -1,6 +1,6 @@
 # DEFCON 2019 Quals LCARS000
 
-[![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-life.svg?token=UsYquYpUiJ6uJsajRAzb&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-life)
+[![Build Status](https://travis-ci.com/o-o-overflow/dc2019q-LCARS000.svg?token=UsYquYpUiJ6uJsajRAzb&branch=master)](https://travis-ci.com/o-o-overflow/dc2019q-LCARS000)
 
 This challenge contains 3 flags.
 
