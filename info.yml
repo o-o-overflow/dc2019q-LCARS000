@@ -1,6 +1,6 @@
 # Info for the schoreboard
-service_name: "life"
-description: "life"
+service_name: "LCARS000"
+description: "Library Computer Access/Retrieval System"
 tags:
   - misc # it's mixed
 
@@ -9,7 +9,7 @@ violates_flag_format: false # if this is not "true", the flag is verfied against
 # At some point we may start blocking all egress connections. Set this to True if your service needs them. DO NOT RELY ON THIS FOR BLOCKING THOUGH.
 allow_egress: False
 
-flag: "OOO{this is test flag1}" # this is the flag of the service
+flag: "OOO{c1c54538b346dd9c393611af8c06de45}" # this is the flag of the service
 
 # Type can be normal or king_of_the_hill
 type: normal
