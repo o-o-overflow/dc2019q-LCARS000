@@ -4,13 +4,14 @@
 #include <sys/syscall.h>
 #include <sys/socket.h>
 
-static uint32_t top = 0;
+static uint32_t top;
 
 static void unmap_all();
 
 __attribute__((section(".app_start")))
 void _start() {
     unmap_all();
+    top = 0;
     // TODO munmap stack and all shared libraries
     __exit(app_main());
 }
