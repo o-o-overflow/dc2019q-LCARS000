@@ -91,6 +91,7 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
     if (fd < 0) {
         return fd;
     }
+    int region_cnt = 0;
     struct app_header header = {0};
     int ret = read_all(fd, &header, sizeof(header));
     if (ret < 0) {
@@ -108,7 +109,6 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
         goto fail;
     }
     header.name[sizeof(header.name) - 1] = 0;
-    int region_cnt = 0;
     char tmpbuf[0x1000];
     for (int i = 0; i < header.pages; i++) {
         struct app_page pg = {0};
