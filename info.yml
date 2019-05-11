@@ -23,7 +23,7 @@ authors:
   - slipper
 
 game_network_info:
-  host: lcars000.oooverflow.io
+  host: lcars000.quals2019.oooverflow.io
   port: 5000
   
   
