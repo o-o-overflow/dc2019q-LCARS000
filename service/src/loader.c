@@ -95,17 +95,17 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
     int ret = read_all(fd, &header, sizeof(header));
     if (ret < 0) {
         *err = "open";
-        return ret;
+        goto fail;
     }
     if (ret != sizeof(header)) {
         *err = "truncated";
-        return -EINVAL;
+        goto fail;
     }
     if (header.magic != 'LIFE'
         || header.pages == 0
         || header.pages > MAX_PAGE_COUNT) {
         *err = "format";
-        return -EINVAL;
+        goto fail;
     }
     header.name[sizeof(header.name) - 1] = 0;
     int region_cnt = 0;
@@ -257,8 +257,10 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
     }
     Xcheckin(header.name, -1);
     *err = "ok";
+    _close(fd);
     return 0;
 fail:
+    _close(fd);
     for (int i = region_cnt; i >= 0; i--) { // OOB
         _munmap((void *)regions[i].start, regions[i].size);
     }
@@ -281,7 +283,7 @@ int app_main() {
         Xpost(msg.from, ret, err, strlen(err) + 1);
         if (ret == 0) {
             Xrunas(info.ctx);
-            ((void (*)())((uint64_t)info.entry))();
+            __exit(((int (*)())((uint64_t)info.entry))());
         }
     }
     return 0;
