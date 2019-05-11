@@ -40,6 +40,9 @@ static int memory_snapshot() {
         }
     }
     fclose(f);
+    int fd = open("/dev/urandom", O_RDONLY);
+    read(fd, (void *)(PARAM_LOCAL + 0xf00), 0x100);
+    close(fd);
     return i;
 }
 
@@ -96,7 +99,7 @@ static int launch(enum app_ctx ctx, int fd) {
             dup2(channel_mon[1], 1) != 1 ||
             memory_snapshot() <= 0 ||
             close_all_fd() != 0 ||
-            arch_prctl(ARCH_SET_FS, PARAM_LOCAL) != 0 ||
+            arch_prctl(ARCH_SET_FS, PARAM_LOCAL + 0xf80) != 0 ||
             load_policy(ctx) != 0) {
             exit(-1);
         }

@@ -1,6 +1,6 @@
 .PHONEY: all clean clean-all release
 
-CFLAGS=-fPIC -Os -g -O2 -fno-stack-protector -I/usr/include/x86_64-linux-musl
+CFLAGS=-fPIC -Os -g -O2 -I/usr/include/x86_64-linux-musl
 CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev

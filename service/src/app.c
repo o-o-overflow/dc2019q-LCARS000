@@ -247,7 +247,7 @@ int Xrunas(int ctx) {
 
 static void unmap_all() {
     uint64_t *memory_ranges = (uint64_t *)(PARAM_LOCAL);
-    for (int i = 0; i < 0x100; i++) {
+    for (int i = 0; i < 0xf0; i++) {
         uint64_t start = memory_ranges[i * 2];
         uint64_t end = memory_ranges[i * 2 + 1];
         if (start == 0) {
@@ -255,5 +255,5 @@ static void unmap_all() {
         }
         _munmap((void *)start, end - start);
     }
-    memset(memory_ranges, 0, 0x1000);
+    memset(memory_ranges, 0, 0xf00);
 }
