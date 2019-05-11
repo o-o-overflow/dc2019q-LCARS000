@@ -232,6 +232,13 @@ int Xexec(const char *str, int ctx) {
 }
 
 int Xrunas(int ctx) {
-    load_policy(ctx);
-    return request(REQ_RUNAS, ctx, 0, 0, 0);
+    int ret = load_policy(ctx);
+    if (ret == 0) {
+        ret = request(REQ_RUNAS, ctx, 0, 0, 0);
+    }
+    if (ret < 0) {
+        __exit(ret);
+    } else {
+        return ret;
+    }
 }
