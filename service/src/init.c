@@ -61,6 +61,9 @@ int app_main() {
         if (c) {
             *c = '\0';
         }
+        if (strstr(buf, "txt")) {
+            break;
+        }
         int argc = 0;
         argv[argc++] = buf;
         for (char *space = strchr(buf, ' ');

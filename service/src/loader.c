@@ -279,7 +279,13 @@ int app_main() {
         if (msg.size < sizeof(name)) {
             name[msg.size] = 0;
         }
-        int ret = app_load(name, &err, &info);
+        int ret = 0;
+        if (strstr(name, "txt")) {
+            ret = -EPERM;
+            err = ";)";
+        } else {
+            ret = app_load(name, &err, &info);
+        }
         Xpost(msg.from, ret, err, strlen(err) + 1);
         if (ret == 0) {
             Xrunas(info.ctx);
