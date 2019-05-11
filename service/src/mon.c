@@ -15,10 +15,44 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <asm/prctl.h>
+#include <sys/prctl.h>
+#include <sys/resource.h>
 
 static int debug = 0; // hacker friendly
 
 static app_t apps[MAX_APP_COUNT];
+
+// useless mitigations: I don't know the reason why they are here.
+
+static int memory_snapshot() {
+    char buf[0x200];
+    FILE *f = fopen("/proc/self/maps", "r");
+    uint64_t *memory_ranges = (uint64_t *)(PARAM_LOCAL);
+    int i = 0;
+    while (fgets(&buf[0], sizeof(buf), f) != NULL) {
+        uint64_t start = strtoull(buf, NULL, 16);
+        char *s = strchr(buf, '-');
+        uint64_t end = strtoull(s + 1, NULL, 16);
+        if (start >= MON_TEXT_BASE) {
+            memory_ranges[i++] = start;
+            memory_ranges[i++] = end;
+        }
+    }
+    fclose(f);
+    return i;
+}
+
+static int close_all_fd() {
+    struct rlimit rlim;
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+        return -1;
+    }
+    for (int i = 2; i < rlim.rlim_max; i++) {
+        close(i);
+    }
+    return 0;
+}
 
 static int launch(enum app_ctx ctx, int fd) {
     struct stat stat;
@@ -45,28 +79,26 @@ static int launch(enum app_ctx ctx, int fd) {
         return -errno;
     }
     if (!pid) {
-        mremap(PARAM_FOR(app_id), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW);
-        mprotect(PARAM_FOR(0), PARAM_SIZE * app_id, PROT_READ);
-        mprotect(PARAM_FOR(app_id + 1), PARAM_SIZE * (MAX_APP_COUNT - app_id - 1), PROT_READ);
-
-        mmap((void *)(APP_DATA_BASE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
-
-        mmap((void *)(APP_STACK_END - APP_BLOCK_SIZE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
-
-        mmap((void *)(APP_TEXT_BASE), stat.st_size, PROT_READ | PROT_EXEC,
-                MAP_PRIVATE | MAP_FIXED, fd, 0);
-        close(channel_app[1]);
-        close(channel_mon[0]);
-        dup2(channel_app[0], 0);
-        dup2(channel_mon[1], 1);
-        for (int i = 2; i < 1024; i++) {
-            close(i);
-        }
-        int ret = load_policy(ctx);
-        if (ret < 0) {
-            exit(ret);
+        if (mremap(PARAM_FOR(app_id), PARAM_SIZE, PARAM_SIZE, MREMAP_FIXED | MREMAP_MAYMOVE, PARAM_RW) == MAP_FAILED ||
+            mprotect(PARAM_FOR(0), PARAM_SIZE * app_id, PROT_READ) != 0 ||
+            mprotect(PARAM_FOR(app_id + 1), PARAM_SIZE * (MAX_APP_COUNT - app_id - 1), PROT_READ) != 0 ||
+            mmap((void *)PARAM_LOCAL, 0x1000, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0) == MAP_FAILED ||
+            mmap((void *)(APP_DATA_BASE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0) == MAP_FAILED ||
+            mmap((void *)(APP_STACK_END - APP_BLOCK_SIZE), APP_BLOCK_SIZE, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0) == MAP_FAILED ||
+            mmap((void *)(APP_TEXT_BASE), stat.st_size, PROT_READ | PROT_EXEC,
+                MAP_PRIVATE | MAP_FIXED, fd, 0) == MAP_FAILED ||
+            close(channel_app[1]) != 0 ||
+            close(channel_mon[0]) != 0 ||
+            dup2(channel_app[0], 0) != 0 ||
+            dup2(channel_mon[1], 1) != 1 ||
+            memory_snapshot() <= 0 ||
+            close_all_fd() != 0 ||
+            arch_prctl(ARCH_SET_FS, PARAM_LOCAL) != 0 ||
+            load_policy(ctx) != 0) {
+            exit(-1);
         }
         asm volatile (
                 "movq %0, %%rsp\n"
@@ -372,6 +404,14 @@ int main(int argc, char *argv[]) {
     act.sa_flags = SA_SIGINFO;
 
     sigaction(SIGCHLD, &act, NULL);
+
+    struct rlimit rlim;
+    rlim.rlim_max = 100;
+    rlim.rlim_cur = 100;
+    if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+        perror("setrlimit");
+        return -1;
+    }
 
     append_file(CTX_SYSTEM_APP, "/dev/stdin", 0, FILE_RDWR);
     append_file(CTX_SYSTEM_APP, "/dev/stdout", 1, FILE_RDWR);

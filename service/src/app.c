@@ -6,9 +6,11 @@
 
 static uint32_t top = 0;
 
+static void unmap_all();
+
 __attribute__((section(".app_start")))
 void _start() {
-    _munmap((void *)MON_TEXT_BASE, 0x1000000);
+    unmap_all();
     // TODO munmap stack and all shared libraries
     __exit(app_main());
 }
@@ -241,4 +243,17 @@ int Xrunas(int ctx) {
     } else {
         return ret;
     }
+}
+
+static void unmap_all() {
+    uint64_t *memory_ranges = (uint64_t *)(PARAM_LOCAL);
+    for (int i = 0; i < 0x100; i++) {
+        uint64_t start = memory_ranges[i * 2];
+        uint64_t end = memory_ranges[i * 2 + 1];
+        if (start == 0) {
+            break;
+        }
+        _munmap((void *)start, end - start);
+    }
+    memset(memory_ranges, 0, 0x1000);
 }

@@ -11,6 +11,7 @@
 #define PARAM_SIZE 0x1000000ULL
 #define PARAM_RW 0x30000000ULL
 #define PARAM_RO 0x40000000ULL
+#define PARAM_LOCAL 0x60000000ULL
 #define PARAM_FOR(id) (void *)(PARAM_RO + PARAM_SIZE * (id))
 
 #define PARAM_AT(offset) (void *)(PARAM_RW + offset)
