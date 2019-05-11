@@ -96,6 +96,7 @@ int app_main() {
             } else {
                 int fd = download(in, argv[1], atoi(argv[2]));
                 dprintf(out, "download \"%s\" = %d\n", argv[1], fd);
+                _close(fd);
             }
 #ifdef DEBUG
         } else if (!strcmp(argv[0], "open")) {
