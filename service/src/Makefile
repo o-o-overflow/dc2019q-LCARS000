@@ -25,7 +25,7 @@ clean-all: clean
 
 release: all
 	cp LCARS echo.sys crypto.sys loader.sys init.sys ../public
-	cp exp1.uapp flag1.papp exp3.papp exp4.app ../../interaction
+	cp exp1.uapp exp3.papp exp4.app ../../interaction
 
 LCARS: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@.elf $^ -Wl,--Ttext-segment=0x100000000

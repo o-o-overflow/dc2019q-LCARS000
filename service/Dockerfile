@@ -20,9 +20,8 @@ copy public/echo.sys /echo.sys
 
 # Or, include the flag file in the repository
 copy src/root.key /root.key
-copy src/flag1.papp /flag1.papp
-copy src/flag2.txt /flag2.txt
-copy src/flag3.txt /flag3.txt
+copy src/flag22.txt /flag22.txt
+copy src/flag333.txt /flag333.txt
 copy src/flag4.txt /flag4.txt
 
 copy service.conf /service.conf

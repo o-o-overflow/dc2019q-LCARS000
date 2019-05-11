@@ -1,8 +1,8 @@
 from pwn import *
 
 args = ['./LCARS', 'init.sys', 'loader.sys', 'echo.sys',
-        'crypto.sys', 'svc.papp', 'root.key', 'flag1.papp', 'flag2.txt',
-        'flag3.txt']
+        'crypto.sys', 'svc.papp', 'root.key', 'flag1.papp', 'flag22.txt',
+        'flag333.txt']
 # args = ['strace', '-f'] + args
 r = process(args)
 

@@ -422,9 +422,9 @@ int main(int argc, char *argv[]) {
         int fd = open(argv[i], O_RDONLY);
         if (fd != -1) {
             fprintf(stderr, "loaded %s\n", argv[i]);
-            if (!strcmp(argv[i], "flag2.txt")) {
+            if (strstr(argv[i], "flag2")) {
                 append_file(CTX_PLATFORM_APP, argv[i], fd, FILE_RDWR);
-            } else if (!strcmp(argv[i], "flag3.txt")) {
+            } else if (strstr(argv[i], "flag3")) {
                 append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_RDWR);
             } else if (strstr(argv[i], ".sys")) {
                 append_file(CTX_SYSTEM_APP, argv[i], fd, FILE_EXEC);
