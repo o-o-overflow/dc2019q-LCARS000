@@ -9,14 +9,7 @@ context.arch = 'amd64'
 
 # read flag rop
 loader_base = 0x10000000
-Xopen = loader_base + 0x430
-Xecho = loader_base + 0x2b0
-_read = loader_base + 0xa0
-_exit = loader_base + 0x50
 _mprotect = loader_base + 0xd0
-ret = loader_base + 0x57
-pop_rdi = loader_base + 0x1d0
-pop_rsi_r15 = loader_base + 0x1ce
 
 # assume we already have code execution (or rop) as platform_app
 
