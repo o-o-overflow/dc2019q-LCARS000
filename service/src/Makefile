@@ -26,6 +26,7 @@ clean-all: clean
 release: all
 	cp LCARS echo.sys crypto.sys loader.sys init.sys ../public
 	cp exp1.uapp exp3.papp exp4.app ../../interaction
+	cd ../public && zip -P "OOO{c1c54538b346dd9c393611af8c06de45}" LCARS.zip *
 
 LCARS: mon.o msg.o fs.o scmp.o
 	$(PREFIX)gcc -o $@.elf $^ -Wl,--Ttext-segment=0x100000000
