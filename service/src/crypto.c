@@ -102,6 +102,7 @@ int app_main() {
                     ret = -EINVAL;
                     result = "size";
                 } else if (req.cipher_key_id >= 4) {
+                    ret = -EINVAL;
                     result = "key";
                 } else {
                     uint32_t a = shm_alloc(req.cipher_data_size);
