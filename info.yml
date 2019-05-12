@@ -1,6 +1,6 @@
 # Info for the schoreboard
 service_name: "LCARS022"
-description: "Library Computer Access/Retrieval System"
+description: "Library Computer Access/Retrieval System (files are encrypted with flag1.txt of LCARS000, flag is in flag22.txt)"
 tags:
   - pwn
 
