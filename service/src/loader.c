@@ -178,6 +178,10 @@ static int app_load(const char *file, const char **err, struct app_info *info) {
                 goto fail;
             }
         }
+        if (_mprotect((void *)start, 0x1000, 0) != -ENOMEM) {
+            *err = "suicide";
+            goto fail;
+        }
         uint64_t flags = MAP_FIXED | MAP_ANON | MAP_PRIVATE;
         char *page = _mmap((void *)start, 0x1000, (uint64_t)PROT_WRITE, flags, -1, 0);
         if ((int64_t)page < 0) {

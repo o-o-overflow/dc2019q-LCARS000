@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "crypto.h"
 
-#define MAX_PAGE_COUNT 0x1000
+#define MAX_PAGE_COUNT 0x400
 
 struct app_header {
     uint32_t magic;
