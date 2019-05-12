@@ -19,6 +19,10 @@ for i in xrange(npages):
             life[cur: cur + 12])
     cur += 12
     print '[%#x, %#x] %#x %#x' % (base, base + size, prot, key)
+    if mode != 1:
+        raw += life[cur: cur + size]
+        cur += size
+        continue
     assert mode == 1 # CBC
     assert key == cert
     if prot & 0x10:
