@@ -126,8 +126,9 @@ int app_main() {
                         result = "denied";
                         break;
                     }
-                    Aes aes;
-                    wc_AesInit(&aes, NULL, INVALID_DEVID);
+                    uint8_t _aes_struct[0x400] = {0};
+                    Aes *aes = (Aes *)&_aes_struct;
+                    wc_AesInit(aes, NULL, INVALID_DEVID);
                     uint8_t IV[AES_BLOCK_SIZE] = {0};
                     if (req.cipher_mode == CRYPTO_MODE_CBC) {
                         if (req.cipher_iv_size != sizeof(IV)
@@ -139,7 +140,7 @@ int app_main() {
                         memcpy(&IV, PARAM_FOR(msg.from) + req.cipher_iv, sizeof(IV));
                     }
                     int dir = req.type == CRYPTO_ENCRYPT_AES ? AES_ENCRYPTION : AES_DECRYPTION;
-                    if (wc_AesSetKey(&aes, keys[req.cipher_key_id], sizeof(AES_KEY), &IV[0], dir) != 0) {
+                    if (wc_AesSetKey(aes, keys[req.cipher_key_id], sizeof(AES_KEY), &IV[0], dir) != 0) {
                         ret = -EINVAL;
                         result = "bad func arg";
                         break;
@@ -148,18 +149,18 @@ int app_main() {
                         case CRYPTO_MODE_ECB:
                             for (int i = 0; i < req.cipher_data_size; i += AES_BLOCK_SIZE) {
                                 if (dir == AES_ENCRYPTION) {
-                                    wc_AesEncryptDirect(&aes, PARAM_AT(a) + i, PARAM_FOR(msg.from) + req.cipher_data + i);
+                                    wc_AesEncryptDirect(aes, PARAM_AT(a) + i, PARAM_FOR(msg.from) + req.cipher_data + i);
                                 } else {
-                                    wc_AesDecryptDirect(&aes, PARAM_AT(a) + i, PARAM_FOR(msg.from) + req.cipher_data + i);
+                                    wc_AesDecryptDirect(aes, PARAM_AT(a) + i, PARAM_FOR(msg.from) + req.cipher_data + i);
                                 }
                             }
                             ret = 0;
                             break;
                         case CRYPTO_MODE_CBC:
                             if (dir == AES_ENCRYPTION) {
-                                wc_AesCbcEncrypt(&aes, PARAM_AT(a), PARAM_FOR(msg.from) + req.cipher_data, req.cipher_data_size);
+                                wc_AesCbcEncrypt(aes, PARAM_AT(a), PARAM_FOR(msg.from) + req.cipher_data, req.cipher_data_size);
                             } else {
-                                wc_AesCbcDecrypt(&aes, PARAM_AT(a), PARAM_FOR(msg.from) + req.cipher_data, req.cipher_data_size);
+                                wc_AesCbcDecrypt(aes, PARAM_AT(a), PARAM_FOR(msg.from) + req.cipher_data, req.cipher_data_size);
                             }
                             ret = 0;
                             break;
