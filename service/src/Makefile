@@ -5,7 +5,7 @@ CFLAGS+=-Wno-multichar
 LIBC=/usr/lib/x86_64-linux-musl/libc.a # apt-get install musl-dev
 LIBWOLFSSL=/usr/lib/x86_64-linux-gnu/libwolfssl.a # apt-get install libwolfssl-dev
 SERVICES=echo.sys init.sys loader.sys crypto.sys
-APPLETS=svc.papp perm.uapp perm.papp perm.sapp flag1.papp exp1.uapp exp3.papp exp4.app
+APPLETS=svc.papp perm.uapp perm.papp perm.sapp flag1.papp exp1.uapp exp3.papp exp4.app bug.uapp
 KEYS=system.pub system.priv platform.pub platform.priv
 CERTS=certs.h certs-test.h
 FLAGS=flag1.h
@@ -14,7 +14,7 @@ all: $(FLAGS) $(CERTS) LCARS $(SERVICES) $(APPLETS)
 
 .intermediates: $(KEYS) \
 	echo.sys.elf init.sys.elf loader.sys.elf crypto.sys.elf \
-	svc.app.elf perm.app.elf flag1.app.elf \
+	svc.app.elf perm.app.elf flag1.app.elf bug.app.elf \
 	svc.app perm.app flag1.app
 
 clean:
