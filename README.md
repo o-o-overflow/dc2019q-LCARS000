@@ -6,6 +6,12 @@ This challenge contains 3 flags.
 
 `LCARS` is a micro kernel that could load and run multiple apps. 
 
+## Versions
+
+LCARS000: v0.2
+LCARS022: v0.4
+LCARS333: v0.5
+
 ## Services
  
 Services are loaded from the filesystem during booting process. They are
@@ -130,3 +136,55 @@ SYSTEM\_APP.
 Untrusted user can not talk to the loader directly. The hacker
 should have at least PLATFORM\_APP privilege to talk to the loader to do
 unmapping and remapping. Hacker should have solved Level2 before Level3.
+
+### Level3+: Race condition in message forwarding
+
+The kernel never gurantees that the consitency in message forwarding. There
+are race conditions if the message reciever does not match the intended
+one. This is partially mitigated by enforcing message reciever is alive and
+cleaning up message queue of any dead task.
+
+However, the message will be forwarded if the task dies and its pid is
+quickly reused. The sender has no way to tell if the reciever is still
+valid.
+
+One possible exploit is to send request to the crypto without recieving the
+response while keeping crypto engine busy. A new `loader` with same pid
+will see the crypto engine in a broken state.
+
+The exploit leverages bugs in message processing so PLATFORM\_APP privilege is
+required.
+
+### Backdoor1: fd leak
+
+In v0.2, the kernel process close fds upto 1024, but the default limit of
+files is more than 1024.  Untrusted apps can spray the fd by creating a lot 
+of files. Then new tasks are able to hijack unix sockets between kernel and
+other task with higher privilege.
+
+Fixed in v0.3
+
+### Backdoor2: uninitalized top
+
+`top` is used for allocating from shared memory, is located at the
+beginning of data segment. It is always initialized for services, but not
+for apps, since the data segments are not signed and completely controlled
+by user.
+
+The only signed app available to users is `flag1.papp`. So this is not a
+severe bug and it is probably not exploitable.
+
+Fixed in v0.4
+
+### Backdoor3: arbitrary mmap
+
+The loader is supposed to be able to mmap to arbitrary address only if the
+address is not in use. I (and a few other hackers) just assumed mmap to
+exsiting pages with `MMAP_FIXED` will fail. This is *WRONG*.
+
+A common exploit is to use mmap to replace current stack. This gives a few
+teams much easier solution to SYSTEM\_APP privilege. However, it only
+affects versions used in Level1 and Level2, and its difficulty is between
+the intended solutions of these levels, so it's not so bad.
+
+Fixed in v0.5
